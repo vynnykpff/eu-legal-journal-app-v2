@@ -40,7 +40,7 @@ export function Select({
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex h-12 w-full items-center justify-between gap-3 rounded-md border border-border bg-white px-4 text-left text-muted shadow-sm outline-none transition hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-border bg-white px-4 text-left text-muted shadow-sm outline-none transition hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary/20"
         onClick={() => setOpen((value) => !value)}
       >
         <span className="truncate">{selected?.label ?? placeholder}</span>
@@ -55,7 +55,7 @@ export function Select({
               role="option"
               aria-selected={option.value === value}
               className={cn(
-                "flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm transition hover:bg-accent-soft",
+                "flex w-full cursor-pointer items-center justify-between rounded px-3 py-2 text-left text-sm transition hover:bg-accent-soft",
                 option.value === value && "bg-accent-soft font-semibold text-primary",
               )}
               onClick={() => {

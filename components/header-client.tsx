@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Lang, MenuItem, SiteSettings } from "@/lib/types";
 import type { SearchEntry } from "@/lib/search";
 import { Icon } from "@/components/icons";
@@ -25,6 +25,7 @@ export function HeaderClient({
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuMounted, setIsMenuMounted] = useState(false);
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -47,6 +48,29 @@ export function HeaderClient({
       setQuery("");
     }
   };
+
+  const openMenu = () => {
+    setIsMenuMounted(true);
+    window.requestAnimationFrame(() => setIsMenuOpen(true));
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  };
+
+  useEffect(() => {
+    if (isMenuOpen) return;
+    const timeout = window.setTimeout(() => setIsMenuMounted(false), 320);
+    return () => window.clearTimeout(timeout);
+  }, [isMenuOpen]);
 
   return (
     <header className="bg-white">
@@ -98,8 +122,8 @@ export function HeaderClient({
           </form>
         </div>
 
-        <button className="grid h-11 w-11 place-items-center rounded-md border border-border bg-white text-primary shadow-sm lg:hidden" type="button" onClick={() => setIsMenuOpen((value) => !value)} aria-label="Меню">
-          <span className="text-2xl leading-none">{isMenuOpen ? "×" : "☰"}</span>
+        <button className="grid h-11 w-11 place-items-center rounded-md border border-border bg-white text-primary shadow-sm transition hover:border-primary hover:bg-[#f8fafd] lg:hidden" type="button" onClick={toggleMenu} aria-label="Меню" aria-expanded={isMenuOpen}>
+          <span className={cn("text-2xl leading-none transition duration-200", isMenuOpen && "rotate-90 scale-110")}>{isMenuOpen ? "×" : "☰"}</span>
         </button>
       </div>
 
@@ -130,12 +154,25 @@ export function HeaderClient({
         </div>
 
       </nav>
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-primary/30 backdrop-blur-sm lg:hidden" onClick={() => setIsMenuOpen(false)}>
-          <div className="ml-auto flex h-full w-[min(420px,92vw)] flex-col overflow-y-auto bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+      {isMenuMounted && (
+        <div
+          className={cn(
+            "fixed inset-0 z-40 bg-primary/30 backdrop-blur-sm transition duration-200 ease-out lg:hidden",
+            isMenuOpen ? "opacity-100" : "pointer-events-none opacity-0",
+          )}
+          aria-hidden={!isMenuOpen}
+          onClick={closeMenu}
+        >
+          <div
+            className={cn(
+              "ml-auto flex h-full w-[min(420px,92vw)] transform-gpu flex-col overflow-y-auto bg-white shadow-2xl transition duration-300 ease-out will-change-transform",
+              isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-95",
+            )}
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-border p-5">
               <span className="text-lg font-bold text-primary">Меню</span>
-              <button className="grid h-10 w-10 place-items-center rounded-md border border-border text-2xl text-primary" type="button" onClick={() => setIsMenuOpen(false)} aria-label="Закрити меню">×</button>
+              <button className="grid h-10 w-10 place-items-center rounded-md border border-border text-2xl text-primary transition hover:border-primary hover:bg-[#f8fafd]" type="button" onClick={closeMenu} aria-label="Закрити меню">×</button>
             </div>
             <div className="space-y-4 p-5">
               <form className="relative" onSubmit={submitSearch}>
@@ -146,7 +183,7 @@ export function HeaderClient({
                 {!!results.length && (
                   <div className="mt-2 rounded-md border border-border bg-white p-2 shadow-xl">
                     {results.map((result) => (
-                      <Link key={result.href} href={result.href} className="block rounded px-3 py-2 hover:bg-accent-soft" onClick={() => { setQuery(""); setIsMenuOpen(false); }}>
+                      <Link key={result.href} href={result.href} className="block rounded px-3 py-2 hover:bg-accent-soft" onClick={() => { setQuery(""); closeMenu(); }}>
                         <span className="block text-sm font-semibold text-primary">{result.title}</span>
                         <span className="block truncate text-xs text-muted">{result.meta}</span>
                       </Link>
@@ -161,13 +198,13 @@ export function HeaderClient({
               <div className="space-y-2">
                 {menu.map((item) => (
                   <div key={`${item.id}-${item.label}`} className="rounded-md border border-border">
-                    <Link href={item.link === "#" ? "#" : item.link} className="block px-4 py-3 font-bold text-primary" onClick={() => !item.items.length && setIsMenuOpen(false)}>
+                    <Link href={item.link === "#" ? "#" : item.link} className="block px-4 py-3 font-bold text-primary" onClick={() => !item.items.length && closeMenu()}>
                       {item.label}
                     </Link>
                     {!!item.items.length && (
                       <div className="border-t border-border bg-[#f8fafd] py-2">
                         {item.items.map((child) => (
-                          <Link key={`${child.id}-${child.label}`} href={child.link} className="block px-6 py-2 text-sm leading-5 text-[#33435c] hover:text-primary" onClick={() => setIsMenuOpen(false)}>
+                          <Link key={`${child.id}-${child.label}`} href={child.link} className="block px-6 py-2 text-sm leading-5 text-[#33435c] hover:text-primary" onClick={closeMenu}>
                             {child.label}
                           </Link>
                         ))}

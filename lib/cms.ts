@@ -6,6 +6,8 @@ const CMS_URL =
   process.env.STRAPI_API_URL ??
   (process.env.NODE_ENV === "development" ? "http://localhost:1337" : "https://cms.legal-journal.e-u.edu.ua");
 const API_URL = `${CMS_URL.replace(/\/$/, "")}/api`;
+const LOCAL_HEADER_LOGO = "/images/header-logo.svg";
+const LOCAL_FOOTER_LOGO = "/images/footer-logo.svg";
 
 type StrapiItem<T> = { id?: number; attributes?: T } & T;
 
@@ -195,8 +197,8 @@ export async function getSiteSettings(lang: Lang): Promise<SiteSettings> {
   return {
     email: String(navbar.email ?? "legal.journal@e-u.edu.ua"),
     issn: String(mainMenu.issn ?? "3041-1149"),
-    logoHeader: mediaUrl(setting.logoHeader),
-    logoFooter: mediaUrl(setting.logoFooter),
+    logoHeader: LOCAL_HEADER_LOGO,
+    logoFooter: LOCAL_FOOTER_LOGO,
     copyrights: String(setting.copyrights ?? "© Європейський правничий часопис"),
   };
 }

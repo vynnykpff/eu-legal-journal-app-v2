@@ -62,7 +62,7 @@ export function AccordionTrigger({ children, className }: { children: ReactNode;
       type="button"
       aria-expanded={item.isOpen}
       aria-controls={item.contentId}
-      className={cn("group flex w-full items-center justify-between text-left transition hover:bg-[#fbfcff]", className)}
+      className={cn("group flex w-full cursor-pointer items-center justify-between text-left transition hover:bg-[#fbfcff]", className)}
       onClick={() => context.setValue(item.isOpen ? null : item.value)}
     >
       {children}
