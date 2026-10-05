@@ -8,13 +8,13 @@ import type { Lang, Release, StaticPage } from "@/lib/types";
 
 export function Hero({ lang, latest }: { lang: Lang; latest: Release }) {
   return (
-    <section className="watermark border-b border-border py-10">
-      <div className="container grid gap-8 lg:grid-cols-[1.1fr_360px_270px]">
-        <div className="pt-4">
-          <div className="mb-3 text-sm font-semibold uppercase tracking-[0.32em] text-accent">Науковий журнал</div>
-          <h1 className="journal-title text-5xl font-bold leading-tight text-primary md:text-6xl">Європейський<br />правничий часопис</h1>
+    <section className="watermark border-b border-border py-7 md:py-10">
+      <div className="container grid gap-7 lg:grid-cols-[1.1fr_360px_270px] lg:gap-8">
+        <div className="pt-2 md:pt-4">
+          <div className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-accent sm:text-sm">Науковий журнал</div>
+          <h1 className="journal-title text-4xl font-bold leading-tight text-primary sm:text-5xl md:text-6xl">Європейський<br />правничий часопис</h1>
           <p className="mt-3 text-xl font-semibold uppercase tracking-[0.16em] text-[#4a5365]">European Legal Journal</p>
-          <p className="mt-5 max-w-xl leading-7 text-[#33435c]">Фахове рецензоване видання, що висвітлює актуальні проблеми права в Україні, Європі та світі. Платформа для наукового діалогу, обміну ідеями та розвитку правничої науки.</p>
+          <p className="mt-5 max-w-xl text-base leading-7 text-[#33435c]">Фахове рецензоване видання, що висвітлює актуальні проблеми права в Україні, Європі та світі. Платформа для наукового діалогу, обміну ідеями та розвитку правничої науки.</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Badge><Icon name="building" className="h-4 w-4" />ISSN 3041-1149 (Print)</Badge>
             <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б» (Право)</Badge>
@@ -56,11 +56,11 @@ export function HomeCards({ lang, latest }: { lang: Lang; latest: Release }) {
   return (
     <section className="container mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
-        <Card key={card.title} className="flex h-full flex-col p-6 transition hover:-translate-y-1 hover:shadow-lg">
-          <div className="mb-4 flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-white"><Icon name={card.icon} className="h-6 w-6" /></span><h2 className="text-xl font-bold">{card.title}</h2></div>
+        <Card key={card.title} className="flex h-full flex-col p-5 transition duration-200 hover:-translate-y-1 hover:border-accent hover:shadow-lg md:p-6">
+          <div className="mb-4 flex items-center gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-primary text-white"><Icon name={card.icon} className="h-5 w-5" /></span><h2 className="text-lg font-bold text-primary">{card.title}</h2></div>
           {card.cover && <div className="mb-3 flex gap-4"><JournalCover compact /><div><div className="font-bold">{latest.title}</div><div className="mt-1 text-xs text-muted">Опубліковано: {latest.publicationDate}</div></div></div>}
           <p className="min-h-14 text-sm leading-6 text-[#33435c]">{card.body}</p>
-          <Link className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-semibold text-primary" href={getLocalizedPath(lang, card.href)}>Детальніше <Icon name="arrow" className="h-4 w-4" /></Link>
+          <Link className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-semibold text-primary transition hover:gap-3 hover:text-[#0b3d91]" href={getLocalizedPath(lang, card.href)}>Детальніше <Icon name="arrow" className="h-4 w-4" /></Link>
         </Card>
       ))}
     </section>
@@ -70,7 +70,7 @@ export function HomeCards({ lang, latest }: { lang: Lang; latest: Release }) {
 export function EditorMessage() {
   return (
     <section className="container mt-8">
-      <Card className="grid gap-5 border-l-4 border-l-accent bg-white p-6 md:grid-cols-[auto_1fr] md:items-start">
+      <Card className="grid gap-5 border-l-4 border-l-accent bg-white p-5 md:grid-cols-[auto_1fr] md:items-start md:p-6">
         <div className="grid h-14 w-14 place-items-center rounded-full bg-primary text-lg font-bold text-white">ЦП</div>
         <div>
           <div className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">Слово головного редактора</div>
@@ -86,14 +86,14 @@ export function EditorMessage() {
 
 export function PageHero({ title, description }: { title: string; description: string }) {
   return (
-    <section className="watermark border-b border-border py-9">
+    <section className="watermark border-b border-border py-6 md:py-9">
       <div className="container">
         <nav className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
           <Link className="transition hover:text-primary hover:underline hover:underline-offset-4" href="/uk/">Головна</Link>
           <span>›</span>
           <span>{title}</span>
         </nav>
-        <h1 className="journal-title text-5xl font-bold text-primary">{title}</h1>
+        <h1 className="journal-title text-[2rem] font-bold leading-tight text-primary sm:text-4xl md:text-5xl">{title}</h1>
         <p className="mt-3 max-w-2xl leading-6 text-[#33435c]">{description}</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Badge><Icon name="building" className="h-4 w-4" />ISSN 3041-1149 (Print)</Badge>

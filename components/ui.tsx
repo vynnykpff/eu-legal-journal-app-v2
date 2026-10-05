@@ -19,7 +19,7 @@ export function LinkButton({
     <Link
       href={href}
       className={cn(
-        "inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition",
+        "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition duration-200",
         variant === "primary" && "bg-accent text-primary shadow-sm hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md active:translate-y-0",
         variant === "outline" && "border border-primary bg-white text-primary hover:-translate-y-0.5 hover:border-accent hover:bg-accent-soft hover:shadow-sm active:translate-y-0",
         variant === "ghost" && "text-primary hover:bg-accent-soft hover:text-[#071d45]",
@@ -39,7 +39,7 @@ export function ButtonLink({
   return (
     <a
       className={cn(
-        "inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition",
+        "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition duration-200",
         variant === "primary" && "bg-accent text-primary shadow-sm hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md active:translate-y-0",
         variant === "outline" && "border border-primary bg-white text-primary hover:-translate-y-0.5 hover:border-accent hover:bg-accent-soft hover:shadow-sm active:translate-y-0",
         variant === "ghost" && "text-primary hover:bg-accent-soft hover:text-[#071d45]",
@@ -56,7 +56,7 @@ export function Card({ className, ...props }: ComponentProps<"div">) {
 
 export function Badge({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2 rounded-md border border-[#ead58b] bg-white px-3 py-1 text-xs font-semibold text-primary", className)}>
+    <span className={cn("inline-flex min-h-10 items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-bold text-primary shadow-sm", className)}>
       {children}
     </span>
   );
