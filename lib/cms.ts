@@ -10,7 +10,8 @@ const API_URL = `${CMS_URL.replace(/\/$/, "")}/api`;
 
 type StrapiItem<T> = { id?: number; attributes?: T } & T;
 
-function attrs<T>(item: StrapiItem<T>): T {
+function attrs<T>(item: StrapiItem<T> | null | undefined): T {
+  if (!item) return {} as T;
   return (item.attributes ?? item) as T;
 }
 
@@ -282,9 +283,9 @@ function mediaUrl(value: unknown): string | undefined {
 }
 
 function getRelationArray(value: unknown): StrapiItem<Record<string, unknown>>[] | null {
-  if (Array.isArray(value)) return value as StrapiItem<Record<string, unknown>>[];
+  if (Array.isArray(value)) return value.filter(Boolean) as StrapiItem<Record<string, unknown>>[];
   const relation = value as { data?: StrapiItem<Record<string, unknown>>[] } | undefined;
-  return Array.isArray(relation?.data) ? relation.data : null;
+  return Array.isArray(relation?.data) ? relation.data.filter(Boolean) : null;
 }
 
 function stringValue(value: unknown): string | undefined {
