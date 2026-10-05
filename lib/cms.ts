@@ -1,6 +1,5 @@
 import { fallbackReleases, getAllArticles } from "@/lib/data";
 import type { Article, CmsPage, Lang, MenuItem, Release, SiteSettings } from "@/lib/types";
-import { PDFParse } from "pdf-parse";
 
 const CMS_URL =
   process.env.NEXT_PUBLIC_API_URL ??
@@ -103,6 +102,7 @@ async function extractPdfText(file: string): Promise<string[] | undefined> {
     const response = await fetch(file, { cache: "no-store" });
     if (!response.ok) return undefined;
 
+    const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({ data: Buffer.from(await response.arrayBuffer()) });
     const result = await parser.getText();
     await parser.destroy();
