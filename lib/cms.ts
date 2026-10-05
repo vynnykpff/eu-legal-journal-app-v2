@@ -1,6 +1,5 @@
 import { fallbackReleases, getAllArticles } from "@/lib/data";
 import type { Article, CmsPage, Lang, MenuItem, Release, SiteSettings } from "@/lib/types";
-import { PDFParse } from "pdf-parse";
 
 const CMS_URL =
   process.env.NEXT_PUBLIC_API_URL ??
@@ -10,7 +9,8 @@ const API_URL = `${CMS_URL.replace(/\/$/, "")}/api`;
 
 type StrapiItem<T> = { id?: number; attributes?: T } & T;
 
-function attrs<T>(item: StrapiItem<T>): T {
+function attrs<T>(item: StrapiItem<T> | null | undefined): T {
+  if (!item) return {} as T;
   return (item.attributes ?? item) as T;
 }
 
@@ -102,6 +102,7 @@ async function extractPdfText(file: string): Promise<string[] | undefined> {
     const response = await fetch(file, { cache: "no-store" });
     if (!response.ok) return undefined;
 
+    const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({ data: Buffer.from(await response.arrayBuffer()) });
     const result = await parser.getText();
     await parser.destroy();
@@ -282,9 +283,9 @@ function mediaUrl(value: unknown): string | undefined {
 }
 
 function getRelationArray(value: unknown): StrapiItem<Record<string, unknown>>[] | null {
-  if (Array.isArray(value)) return value as StrapiItem<Record<string, unknown>>[];
+  if (Array.isArray(value)) return value.filter(Boolean) as StrapiItem<Record<string, unknown>>[];
   const relation = value as { data?: StrapiItem<Record<string, unknown>>[] } | undefined;
-  return Array.isArray(relation?.data) ? relation.data : null;
+  return Array.isArray(relation?.data) ? relation.data.filter(Boolean) : null;
 }
 
 function stringValue(value: unknown): string | undefined {
