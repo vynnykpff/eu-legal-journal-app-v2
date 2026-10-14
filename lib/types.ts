@@ -39,7 +39,7 @@ export type StaticPage = {
   title: string;
   description: string;
   path: string;
-  sections: { heading: string; body: string[] }[];
+  sections: { heading: string; body: string[]; list?: boolean }[];
 };
 
 export type MenuChild = {

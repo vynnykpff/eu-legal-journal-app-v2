@@ -10,7 +10,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string 
 
   return (
     <Shell lang={lang} active="/publication-ethics">
-      <PageHero title={page.title} description={page.description} />
+      <PageHero title={page.title} />
       <StaticContent page={page} />
     </Shell>
   );

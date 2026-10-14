@@ -3,25 +3,24 @@ import { Badge, ButtonLink, Card, LinkButton } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { JournalCover } from "@/components/cover";
 import { ArchiveClient, IssueTable } from "@/components/archive-client";
-import { editorialMembers, getLocalizedPath, pages } from "@/lib/data";
+import { bibliographicDatabases, editorialMembers, getLocalizedPath, indexingServices, journalTasks, pages } from "@/lib/data";
 import type { Lang, Release, StaticPage } from "@/lib/types";
 
-export function Hero({ lang, latest }: { lang: Lang; latest: Release }) {
+export function Hero({ submissionPath }: { submissionPath: string }) {
   return (
     <section className="watermark border-b border-border py-7 md:py-10">
-      <div className="container grid gap-7 lg:grid-cols-[1.1fr_360px_270px] lg:gap-8">
+      <div className="container grid gap-7 xl:grid-cols-[minmax(0,1fr)_320px_300px] lg:gap-8">
         <div className="pt-2 md:pt-4">
           <div className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-accent sm:text-sm">Науковий журнал</div>
           <h1 className="journal-title text-4xl font-bold leading-tight text-primary sm:text-5xl md:text-6xl">Європейський<br />правничий часопис</h1>
           <p className="mt-3 text-xl font-semibold uppercase tracking-[0.16em] text-[#4a5365]">European Legal Journal</p>
-          <p className="mt-5 max-w-xl text-base leading-7 text-[#33435c]">Фахове рецензоване видання, що висвітлює актуальні проблеми права в Україні, Європі та світі. Платформа для наукового діалогу, обміну ідеями та розвитку правничої науки.</p>
+          <p className="mt-5 max-w-xl text-base leading-7 text-[#33435c]">Журнал включено до Переліку наукових фахових видань України (категорія «Б») відповідно до наказу МОН України від 11 червня 2026 року № 928 (Додаток 14) зі спеціальностей: D8 Право, D9 Міжнародне право.</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Badge><Icon name="building" className="h-4 w-4" />ISSN 3041-1149 (Print)</Badge>
-            <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б» (Право)</Badge>
+            <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б»</Badge>
+            <Badge><Icon name="building" className="h-4 w-4" />Кластер: Право</Badge>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            <LinkButton href={getLocalizedPath(lang, "/authors")}><Icon name="file" className="h-4 w-4" />Подати статтю</LinkButton>
-            <LinkButton href={getLocalizedPath(lang, "/current-issue")} variant="outline"><Icon name="book" className="h-4 w-4" />Поточний випуск</LinkButton>
+            <LinkButton href={submissionPath}><Icon name="file" className="h-4 w-4" />Подати статтю</LinkButton>
           </div>
         </div>
         <div className="justify-self-center"><JournalCover /></div>
@@ -29,15 +28,17 @@ export function Hero({ lang, latest }: { lang: Lang; latest: Release }) {
           <h2 className="mb-4 text-lg font-bold">Про видання</h2>
           {[
             ["building", "Засновник та видавець", "ПВНЗ «Європейський університет»"],
+            ["building", "Код за ЄДРПОУ видавця", "24366800"],
             ["calendar", "Рік заснування", "2023"],
             ["clock", "Періодичність", "У міру накопичення"],
             ["globe", "Мови публікацій", "Українська, англійська"],
             ["link", "DOI prefix", "10.36919"],
-            ["file", "Останній випуск", latest.title],
+            ["link", "ROR видавця", "https://ror.org/032s10s29"],
+            ["file", "Ідентифікатор медіа", "R30-01886"],
           ].map(([icon, label, value]) => (
             <div key={label} className="flex gap-3 border-b border-border py-3 last:border-0">
               <Icon name={icon} className="mt-1 h-5 w-5 text-primary" />
-              <div><div className="text-sm font-bold">{label}</div><div className="text-xs text-muted">{value}</div></div>
+              <div><div className="text-sm font-bold">{label}</div><div className="break-words text-xs text-muted">{value.startsWith("https://") ? <a href={value} className="underline underline-offset-2" target="_blank" rel="noreferrer">{value}</a> : value}</div></div>
             </div>
           ))}
         </Card>
@@ -46,12 +47,12 @@ export function Hero({ lang, latest }: { lang: Lang; latest: Release }) {
   );
 }
 
-export function HomeCards({ lang, latest }: { lang: Lang; latest: Release }) {
+export function HomeCards({ lang, latest, licensePath }: { lang: Lang; latest: Release; licensePath: string }) {
   const cards = [
-    { title: "Останній випуск", href: "/current-issue", icon: "book", body: latest.description, cover: true },
-    { title: "Для авторів", href: "/authors", icon: "file", body: "Вимоги до оформлення статей, процес рецензування, порядок подання." },
-    { title: "Індексація", href: "/indexing", icon: "globe", body: "Google Scholar, Crossref, ORCID, ROAD, BASE." },
-    { title: "Редакційна політика", href: "/publication-ethics", icon: "shield", body: "Етика публікацій, політика рецензування і відкритого доступу." },
+    { title: "Поточний випуск", href: getLocalizedPath(lang, "/current-issue"), icon: "book", body: latest.description, cover: true },
+    { title: "Ліцензія", href: licensePath, icon: "file", body: <>Усі статті з 2026 року розповсюджуються на умовах ліцензії <a href="https://creativecommons.org/licenses/by/4.0/" className="font-semibold underline underline-offset-2" target="_blank" rel="noreferrer">Creative Commons Attribution BY 4.0 (CC BY 4.0)</a>.</> },
+    { title: "Індексація", href: getLocalizedPath(lang, "/indexing"), icon: "globe", body: <><DatabaseLinks links={indexingServices} /><span className="mt-3 block font-semibold">Бібліографічні бази даних:</span><DatabaseLinks links={bibliographicDatabases} /></> },
+    { title: "Рубрики Журналу", href: getLocalizedPath(lang, "/journal-rubrics"), icon: "shield", body: "Наукові напрями та рубрики журналу." },
   ];
   return (
     <section className="container mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -59,32 +60,34 @@ export function HomeCards({ lang, latest }: { lang: Lang; latest: Release }) {
         <Card key={card.title} className="flex h-full flex-col p-5 transition duration-200 hover:-translate-y-1 hover:border-accent hover:shadow-lg md:p-6">
           <div className="mb-4 flex items-center gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-primary text-white"><Icon name={card.icon} className="h-5 w-5" /></span><h2 className="text-lg font-bold text-primary">{card.title}</h2></div>
           {card.cover && <div className="mb-3 flex gap-4"><JournalCover compact /><div><div className="font-bold">{latest.title}</div><div className="mt-1 text-xs text-muted">Опубліковано: {latest.publicationDate}</div></div></div>}
-          <p className="min-h-14 text-sm leading-6 text-[#33435c]">{card.body}</p>
-          <Link className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-semibold text-primary transition hover:gap-3 hover:text-[#0b3d91]" href={getLocalizedPath(lang, card.href)}>Детальніше <Icon name="arrow" className="h-4 w-4" /></Link>
+          <div className="min-h-14 text-sm leading-6 text-[#33435c]">{card.body}</div>
+          <Link className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-semibold text-primary transition hover:gap-3 hover:text-[#0b3d91]" href={card.href}>Детальніше <Icon name="arrow" className="h-4 w-4" /></Link>
         </Card>
       ))}
     </section>
   );
 }
 
-export function EditorMessage() {
+function DatabaseLinks({ links }: { links: { label: string; href: string }[] }) {
+  return <>{links.map((link, index) => <span key={link.href}>{index > 0 && ", "}<a href={link.href} className="underline underline-offset-2 hover:text-primary" target="_blank" rel="noreferrer">{link.label}</a></span>)}.</>;
+}
+
+export function JournalPurpose() {
   return (
     <section className="container mt-8">
-      <Card className="grid gap-5 border-l-4 border-l-accent bg-white p-5 md:grid-cols-[auto_1fr] md:items-start md:p-6">
-        <div className="grid h-14 w-14 place-items-center rounded-full bg-primary text-lg font-bold text-white">ЦП</div>
-        <div>
-          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">Слово головного редактора</div>
-          <h2 className="mt-2 text-2xl font-bold text-primary">Петро Цимбал</h2>
-          <p className="mt-3 max-w-4xl text-base leading-7 text-[#33435c]">
-            Європейський правничий часопис створено як відкритий простір для якісної правничої дискусії, академічної доброчесності та поширення результатів досліджень, що мають значення для України, Європи і міжнародної правової спільноти.
-          </p>
-        </div>
+      <Card className="border-l-4 border-l-accent p-5 md:p-6">
+        <h2 className="text-2xl font-bold text-primary">Мета видання</h2>
+        <p className="mt-3 max-w-4xl text-base leading-7 text-[#33435c]">Мета видання - оприлюднення результатів наукових досліджень у галузі права шляхом висвітлення актуальних проблем юридичної науки та практики, а також сприяння вдосконаленню національного законодавства та правозастосовної діяльності. Журнал прагне інтегрувати українську правову думку в європейський та світовий науковий простір.</p>
       </Card>
+      <div className="mt-6 rounded-md bg-[#edf3ff] px-6 py-5 text-primary">
+        <h2 className="text-xl font-bold">Завдання видання:</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 leading-7">{journalTasks.map((task) => <li key={task}>{task}</li>)}</ul>
+      </div>
     </section>
   );
 }
 
-export function PageHero({ title, description }: { title: string; description: string }) {
+export function PageHero({ title, description }: { title: string; description?: string }) {
   return (
     <section className="watermark border-b border-border py-6 md:py-9">
       <div className="container">
@@ -94,10 +97,10 @@ export function PageHero({ title, description }: { title: string; description: s
           <span>{title}</span>
         </nav>
         <h1 className="journal-title text-[2rem] font-bold leading-tight text-primary sm:text-4xl md:text-5xl">{title}</h1>
-        <p className="mt-3 max-w-2xl leading-6 text-[#33435c]">{description}</p>
+        {description && <p className="mt-3 max-w-2xl leading-6 text-[#33435c]">{description}</p>}
         <div className="mt-5 flex flex-wrap gap-3">
-          <Badge><Icon name="building" className="h-4 w-4" />ISSN 3041-1149 (Print)</Badge>
-          <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б» (Право)</Badge>
+          <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б»</Badge>
+          <Badge><Icon name="building" className="h-4 w-4" />Кластер: Право</Badge>
         </div>
       </div>
     </section>
@@ -132,7 +135,7 @@ export function StaticContent({ page }: { page: StaticPage }) {
   return (
     <section className="container mt-7">
       <Card className="prose-journal p-6">
-        {page.sections.map((section) => <section key={section.heading}><h2>{section.heading}</h2>{section.body.map((text) => <p key={text}>{text}</p>)}</section>)}
+        {page.sections.map((section) => <section key={section.heading}><h2>{section.heading}</h2>{section.list ? <ul className="list-disc pl-6">{section.body.map((text) => <li key={text}>{renderInlineMarkdown(text)}</li>)}</ul> : section.body.map((text) => <p key={text}>{renderInlineMarkdown(text)}</p>)}</section>)}
       </Card>
     </section>
   );
@@ -427,7 +430,7 @@ export function CmsContent({ blocks }: { blocks: { component: string; content?: 
           return (
             <div key={`${block.component}-${index}`} className="space-y-3">
               {normalizeMarkdownSyntax(block.content ?? "").split(/\n{2,}/).filter(Boolean).map((paragraph) => (
-                <p key={paragraph}>{renderInlineMarkdown(paragraph)}</p>
+                <p key={paragraph}>{renderInlineMarkdown(paragraph.replace(/(?<!\[)Creative Commons Attribution(?: BY)?(?: 4\.0 International)?(?: \(CC BY 4\.0\))?(?![^\[]*\]\()/g, (label) => `[${label}](https://creativecommons.org/licenses/by/4.0/)`))}</p>
               ))}
             </div>
           );

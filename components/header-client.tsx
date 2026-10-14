@@ -129,7 +129,7 @@ export function HeaderClient({
 
       <nav className="bg-primary text-white">
         <div className="container hidden items-center gap-1 lg:flex">
-          <div className="whitespace-nowrap bg-[#041e4c] px-5 py-3 text-sm font-semibold">ISSN {settings.issn}</div>
+          <div className="whitespace-nowrap bg-[#041e4c] px-5 py-3 text-sm font-semibold">ISSN {settings.issn} (Print)</div>
           {menu.map((item) => (
             <div className="group relative" key={`${item.id}-${item.label}`}>
               <Link
