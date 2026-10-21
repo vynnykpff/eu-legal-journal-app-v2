@@ -3,8 +3,9 @@ import { Badge, ButtonLink, Card, LinkButton } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { JournalCover } from "@/components/cover";
 import { ArchiveClient, IssueTable } from "@/components/archive-client";
-import { bibliographicDatabases, editorialMembers, getLocalizedPath, indexingServices, journalTasks, pages } from "@/lib/data";
-import type { Lang, Release, StaticPage } from "@/lib/types";
+import { bibliographicDatabases, getLocalizedPath, indexingServices, journalTasks, pages } from "@/lib/data";
+import editorialBoardFallback from "@/lib/editorial-board-fallback.json";
+import type { CmsBlock, Lang, Release, StaticPage } from "@/lib/types";
 
 export function Hero({ submissionPath }: { submissionPath: string }) {
   return (
@@ -142,78 +143,11 @@ export function StaticContent({ page }: { page: StaticPage }) {
 }
 
 export function EditorialBoard() {
-  const countryCounts = editorialMembers.reduce<Record<string, number>>((counts, [, , country]) => {
-    counts[country] = (counts[country] ?? 0) + 1;
-    return counts;
-  }, {});
-
-  return (
-    <section className="container mt-7 grid gap-6 lg:grid-cols-[1fr_280px] lg:items-start">
-      <div className="grid gap-4 sm:grid-cols-2">
-        {editorialMembers.map(([name, role, country, id, email], index) => (
-          <Card key={name} className="flex min-h-[210px] flex-col p-5">
-            <div className="flex items-start gap-4">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-md bg-primary text-lg font-bold text-white">
-                {getInitials(name)}
-              </div>
-              <div className="min-w-0">
-                <div className={index < 2 ? "mb-2 inline-flex rounded bg-accent px-2.5 py-1 text-xs font-bold text-primary" : "mb-2 inline-flex rounded bg-accent-soft px-2.5 py-1 text-xs font-bold text-primary"}>
-                  {role}
-                </div>
-                <h3 className="text-lg font-bold leading-snug text-primary">{name}</h3>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-3 border-t border-border pt-4 text-sm">
-              <div className="flex items-start gap-3">
-                <Icon name="building" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span className="leading-6 text-[#33435c]">ПВНЗ «Європейський університет»</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Icon name="globe" className="h-4 w-4 shrink-0 text-primary" />
-                <span className="text-[#33435c]">{country}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Icon name="link" className="h-4 w-4 shrink-0 text-primary" />
-                <span className="inline-flex rounded border border-[#dfe8c5] px-2 py-1 text-xs font-semibold text-[#5d7b16]">{id}</span>
-              </div>
-              {email && (
-                <a className="flex items-center gap-3 text-primary underline-offset-4 hover:underline" href={`mailto:${email}`}>
-                  <Icon name="mail" className="h-4 w-4 shrink-0" />
-                  <span className="break-all">{email}</span>
-                </a>
-              )}
-            </div>
-          </Card>
-        ))}
-      </div>
-      <Card className="sticky top-5 h-fit p-5">
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-md bg-primary text-white">
-            <Icon name="users" className="h-5 w-5" />
-          </span>
-          <div>
-            <h2 className="font-bold text-primary">Склад редколегії</h2>
-            <p className="text-sm text-muted">Міжнародна наукова команда</p>
-          </div>
-        </div>
-        <div className="mt-5 rounded-md bg-[#f4f7fb] p-4 text-center">
-          <div className="text-sm text-muted">Загальна кількість членів</div>
-          <b className="mt-1 block text-4xl text-primary">{editorialMembers.length}</b>
-        </div>
-        <div className="mt-5 space-y-3 text-sm">
-          {Object.entries(countryCounts).map(([country, count]) => (
-            <div key={country} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
-              <span className="text-[#33435c]">{country}</span>
-              <b className="text-primary">{count}</b>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </section>
-  );
+  // Public CMS snapshot keeps verified profiles available when the CMS is offline.
+  return <CmsEditorialBoard blocks={editorialBoardFallback} />;
 }
 
-export function CmsEditorialBoard({ blocks }: { blocks: { component: string; content?: string; items?: string[] }[] }) {
+export function CmsEditorialBoard({ blocks }: { blocks: CmsBlock[] }) {
   const members = parseEditorialMembers(blocks);
 
   if (!members.length) {
@@ -247,7 +181,7 @@ export function CmsEditorialBoard({ blocks }: { blocks: { component: string; con
             <div className="mt-auto grid gap-3 border-t border-border pt-4 text-sm">
               {member.country && (
                 <div className="flex items-center gap-3">
-                  <Icon name="globe" className="h-4 w-4 shrink-0 text-primary" />
+                  <CountryFlag country={member.country} />
                   <span className="text-[#33435c]">{member.country}</span>
                 </div>
               )}
@@ -260,9 +194,9 @@ export function CmsEditorialBoard({ blocks }: { blocks: { component: string; con
               {!!member.identifiers.length && (
                 <div className="flex flex-wrap gap-2">
                   {member.identifiers.map((identifier) => (
-                    <span key={identifier} className="inline-flex rounded border border-[#dfe8c5] px-2 py-1 text-xs font-semibold text-[#5d7b16]">
-                      {identifier}
-                    </span>
+                    <a key={identifier.href} href={identifier.href} target="_blank" rel="noreferrer" className="inline-flex rounded border border-[#dfe8c5] px-2 py-1 text-xs font-semibold text-[#5d7b16] underline-offset-4 transition hover:bg-[#f3f7e9] hover:underline">
+                      {identifier.label}
+                    </a>
                   ))}
                 </div>
               )}
@@ -288,7 +222,7 @@ export function CmsEditorialBoard({ blocks }: { blocks: { component: string; con
         <div className="mt-5 space-y-3 text-sm">
           {Object.entries(countryCounts).map(([country, count]) => (
             <div key={country} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
-              <span className="text-[#33435c]">{country}</span>
+              <span className="flex items-center gap-2 text-[#33435c]"><CountryFlag country={country} />{country}</span>
               <b className="text-primary">{count}</b>
             </div>
           ))}
@@ -296,6 +230,19 @@ export function CmsEditorialBoard({ blocks }: { blocks: { component: string; con
       </Card>
     </section>
   );
+}
+
+function CountryFlag({ country }: { country: string }) {
+  const code = /україн|ukrain/i.test(country) ? "UA"
+    : /польщ|poland|polish/i.test(country) ? "PL"
+    : /швеці|sweden|swedish/i.test(country) ? "SE"
+    : /чех|чеськ|czech/i.test(country) ? "CZ"
+    : null;
+
+  if (!code) return null;
+
+  const flag = [...code].map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0))).join("");
+  return <span aria-hidden="true" className="shrink-0 text-lg leading-none">{flag}</span>;
 }
 
 function getInitials(name: string) {
@@ -314,7 +261,7 @@ type EditorialMemberCard = {
   bio: string;
   country: string;
   email: string;
-  identifiers: string[];
+  identifiers: { label: string; href: string }[];
 };
 
 function parseEditorialMembers(blocks: { content?: string; items?: string[] }[]): EditorialMemberCard[] {
@@ -322,7 +269,7 @@ function parseEditorialMembers(blocks: { content?: string; items?: string[] }[])
     .flatMap((block) => [block.content, ...(block.items ?? [])])
     .filter((value): value is string => Boolean(value))
     .flatMap((value) => decodeHtmlEntities(value).replaceAll("\\n", "\n").split(/\n+/))
-    .map((line) => plainMarkdown(line).trim())
+    .map((line) => line.trim())
     .filter(Boolean);
 
   const members: EditorialMemberCard[] = [];
@@ -334,10 +281,11 @@ function parseEditorialMembers(blocks: { content?: string; items?: string[] }[])
     currentMember = null;
   };
 
-  for (const line of lines) {
+  for (const markdownLine of lines) {
+    const line = plainMarkdown(markdownLine).trim();
     if (isEditorialRole(line)) {
       commit();
-      currentRole = line;
+      currentRole = line.replace(/^Члени редакційної колегії/i, "Член редакційної колегії").replace(/^Editorial board members/i, "Editorial board member");
       continue;
     }
 
@@ -348,7 +296,9 @@ function parseEditorialMembers(blocks: { content?: string; items?: string[] }[])
     }
 
     if (isIdentifierLine(line) && currentMember) {
-      currentMember.identifiers.push(line);
+      for (const match of normalizeMarkdownSyntax(markdownLine).matchAll(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g)) {
+        currentMember.identifiers.push({ label: plainMarkdown(match[1]).trim(), href: match[2] });
+      }
       continue;
     }
 
@@ -376,7 +326,7 @@ function parseEditorialMembers(blocks: { content?: string; items?: string[] }[])
 }
 
 function isEditorialRole(line: string) {
-  return /^(Головний редактор|Заступник головного редактора|Члени редакційної колегії|Editorial board members|Editor-in-chief|Deputy editor)/i.test(line);
+  return /^(Головний редактор|Заступник головного редактора|Член(?:и)? редакційної колегії|Editorial board members?|Editor-in-chief|Deputy editor)/i.test(line);
 }
 
 function isIdentifierLine(line: string) {
@@ -391,7 +341,7 @@ function parseMemberLine(line: string) {
   const country = bio.match(/,\s*([^,]+)$/)?.[1]?.trim() ?? "";
   return {
     name: match[1].trim(),
-    bio,
+    bio: country ? bio.slice(0, bio.lastIndexOf(",")).trim() : bio,
     country,
   };
 }
@@ -400,18 +350,35 @@ export function getStaticPage(path: string) {
   return pages[path];
 }
 
-export function CmsContent({ blocks }: { blocks: { component: string; content?: string; items?: string[]; isShowListMarks?: boolean; link?: string }[] }) {
+export function CmsContent({ blocks }: { blocks: CmsBlock[] }) {
+  const exampleStart = blocks.findIndex((block) => block.component.includes("design-example"));
+
   return (
     <section className="container mt-7">
       <Card className="prose-journal p-6">
         {blocks.map((block, index) => {
+          const isExample = exampleStart >= 0 && index >= exampleStart;
+
+          if (block.component.includes("design-example")) {
+            return (
+              <div key={`${block.component}-${index}`} className="cms-example-block my-6 flex flex-col justify-between gap-4 font-bold leading-relaxed sm:flex-row">
+                <div className="shrink-0">{renderInlineMarkdown(block.UDK ?? "")}</div>
+                <div className="text-right">{renderInlineMarkdown(block.personInfo ?? "")}</div>
+              </div>
+            );
+          }
+
+          if (block.component.includes("center-title")) {
+            return <h2 key={`${block.component}-${index}`} className="cms-centered-title">{plainMarkdown(block.content ?? "")}</h2>;
+          }
+
           if (block.component.includes("title")) {
             return <h2 key={`${block.component}-${index}`}>{plainMarkdown(block.content ?? "")}</h2>;
           }
 
           if (block.component.includes("list")) {
             return (
-              <ul key={`${block.component}-${index}`} className={block.isShowListMarks ? "list-disc pl-6" : "list-none pl-0"}>
+              <ul key={`${block.component}-${index}`} className={`${block.isShowListMarks ? "list-disc pl-6" : "list-none pl-0"}${isExample ? " cms-example-block" : ""}`}>
                 {(block.items ?? []).filter(Boolean).map((item) => <li key={item} className="mb-2">{renderInlineMarkdown(item)}</li>)}
               </ul>
             );
@@ -428,10 +395,17 @@ export function CmsContent({ blocks }: { blocks: { component: string; content?: 
           }
 
           return (
-            <div key={`${block.component}-${index}`} className="space-y-3">
-              {normalizeMarkdownSyntax(block.content ?? "").split(/\n{2,}/).filter(Boolean).map((paragraph) => (
-                <p key={paragraph}>{renderInlineMarkdown(paragraph.replace(/(?<!\[)Creative Commons Attribution(?: BY)?(?: 4\.0 International)?(?: \(CC BY 4\.0\))?(?![^\[]*\]\()/g, (label) => `[${label}](https://creativecommons.org/licenses/by/4.0/)`))}</p>
-              ))}
+            <div key={`${block.component}-${index}`} className={`space-y-3${isExample ? " cms-example-block" : ""}`}>
+              {normalizeMarkdownSyntax(block.content ?? "").split(/\n{2,}/).filter(Boolean).map((paragraph) => {
+                const isPublicationExemption = /^Виключення є лише для статей здобувачів третього рівня/.test(plainMarkdown(paragraph).trim());
+                const content = renderInlineMarkdown(paragraph.replace(/(?<!\[)Creative Commons Attribution(?: BY)?(?: 4\.0 International)?(?: \(CC BY 4\.0\))?(?![^\[]*\]\()/g, (label) => `[${label}](https://creativecommons.org/licenses/by/4.0/)`));
+
+                return (
+                  <p key={paragraph} className={/^\s/.test(paragraph) ? "indent-8 text-justify" : undefined}>
+                    {isPublicationExemption ? <strong>{content}</strong> : content}
+                  </p>
+                );
+              })}
             </div>
           );
         })}
@@ -445,7 +419,7 @@ function plainMarkdown(value: string) {
     .replace(/^#{1,6}\s*/gm, "")
     .replace(/\[([\s\S]*?)\]\(([\s\S]*?)\)/g, "$1")
     .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/__(.*?)__/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
     .replace(/\\\[/g, "[")
     .replace(/\\\]/g, "]");
 }
@@ -475,8 +449,8 @@ function renderInlineMarkdown(value: string) {
       );
     }
 
-    const bold = part.match(/^(?:\*\*|__)([\s\S]*?)(?:\*\*|__)$/);
-    if (bold) return <strong key={`${part}-${index}`}>{renderInlineMarkdown(bold[1])}</strong>;
+    const bold = part.match(/^(?:\*\*([\s\S]*?)\*\*|__([^_]+)__)$/);
+    if (bold) return <strong key={`${part}-${index}`}>{renderInlineMarkdown(bold[1] ?? bold[2])}</strong>;
 
     return <span key={`${part}-${index}`}>{plainMarkdown(part)}</span>;
   });
@@ -485,6 +459,7 @@ function renderInlineMarkdown(value: string) {
 function normalizeMarkdownSyntax(value: string) {
   return decodeHtmlEntities(value)
     .replaceAll("\\n", "\n")
+    .replace(/\\\r?\n/g, "\n")
     .replace(/\\([\[\]()])/g, "$1")
     .replace(/\]\s+\(/g, "](");
 }
@@ -522,7 +497,7 @@ function splitInlineMarkdown(value: string) {
 }
 
 function splitTextMarkdown(value: string) {
-  return value.split(/(\*\*[\s\S]*?\*\*|__[\s\S]*?__|\n)/g).filter(Boolean);
+  return value.split(/(\*\*[\s\S]*?\*\*|__[^_]+__|\n)/g).filter(Boolean);
 }
 
 function decodeHtmlEntities(value: string) {

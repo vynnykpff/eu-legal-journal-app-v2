@@ -54,26 +54,35 @@ export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Releas
         </div>
 
         <Accordion className="space-y-4">
-          {filtered.map((release) => {
+          {filtered.map((release, index) => {
             const key = releaseKey(release);
             return (
-              <AccordionItem key={key} value={key} className="scroll-mt-24" id={key}>
-                <AccordionTrigger className="p-3 sm:p-4">
-                  <div className="grid flex-1 grid-cols-[72px_1fr] gap-3 sm:grid-cols-[92px_1fr] md:grid-cols-[92px_260px_1fr] md:items-center">
-                    <div className="w-[72px] sm:w-auto">
-                      <JournalCover compact />
+              <div key={key} className="space-y-4">
+                {(index === 0 || filtered[index - 1].year !== release.year) && (
+                  <h2 className="flex items-center gap-3 pt-4 text-2xl font-bold text-primary">
+                    <Icon name="calendar" className="h-5 w-5 text-primary" />
+                    {release.year}
+                    <span aria-hidden="true" className="h-px flex-1 bg-border" />
+                  </h2>
+                )}
+                <AccordionItem value={key} className="scroll-mt-24" id={key}>
+                  <AccordionTrigger className="p-3 sm:p-4">
+                    <div className="grid flex-1 grid-cols-[72px_1fr] gap-3 sm:grid-cols-[92px_1fr] md:grid-cols-[92px_260px_1fr] md:items-center">
+                      <div className="w-[72px] sm:w-auto">
+                        <JournalCover compact />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold leading-tight">{release.title}</h3>
+                        <div className="mt-0.5 text-sm text-muted">Опубліковано: {release.publicationDate}</div>
+                        <div className="text-sm text-muted">Статті: {release.articles.length}</div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold leading-tight">{release.title}</h3>
-                      <div className="mt-0.5 text-sm text-muted">Опубліковано: {release.publicationDate}</div>
-                      <div className="text-sm text-muted">Статті: {release.articles.length}</div>
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="border-t border-border p-3 sm:p-5">
-                  {!!release.articles.length && <IssueTable lang={lang} release={release} />}
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionTrigger>
+                  <AccordionContent className="border-t border-border p-3 sm:p-5">
+                    {!!release.articles.length && <IssueTable lang={lang} release={release} />}
+                  </AccordionContent>
+                </AccordionItem>
+              </div>
             );
           })}
         </Accordion>

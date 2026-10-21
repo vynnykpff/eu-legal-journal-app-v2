@@ -104,8 +104,28 @@ button:disabled,
   margin-top: 0;
 }
 
+.prose-journal h2.cms-centered-title {
+  margin-block: 28px;
+  text-align: center;
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 600;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
 .prose-journal p,
 .prose-journal li {
   color: #33435c;
   line-height: 1.75;
+}
+
+.prose-journal .cms-example-block {
+  margin-bottom: 30px;
+  font-size: clamp(16px, 2vw, 20px);
+}
+
+.prose-journal .cms-example-block p,
+.prose-journal .cms-example-block li {
+  line-height: 1.6;
 }

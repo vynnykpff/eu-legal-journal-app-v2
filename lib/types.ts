@@ -60,9 +60,19 @@ export type SiteSettings = {
   copyrights: string;
 };
 
+export type CmsBlock = {
+  component: string;
+  content?: string;
+  items?: string[];
+  isShowListMarks?: boolean;
+  link?: string;
+  UDK?: string;
+  personInfo?: string;
+};
+
 export type CmsPage = {
   title: string;
   url: string;
   description: string;
-  content: { component: string; content?: string; items?: string[]; isShowListMarks?: boolean; link?: string }[];
+  content: CmsBlock[];
 };
