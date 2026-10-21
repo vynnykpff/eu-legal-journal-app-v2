@@ -225,6 +225,8 @@ export async function getCmsPages(lang: Lang): Promise<CmsPage[]> {
           items: Array.isArray(normalized.items) ? normalized.items.map(normalizeListItem) : undefined,
           isShowListMarks: Boolean(normalized.isShowListMarks),
           link: normalized.link ? String(normalized.link) : undefined,
+          UDK: normalized.UDK ? String(normalized.UDK) : undefined,
+          personInfo: normalized.personInfo ? String(normalized.personInfo) : undefined,
         };
       }),
     };

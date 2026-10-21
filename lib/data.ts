@@ -49,17 +49,6 @@ export const fallbackReleases: Release[] = [
   },
 ];
 
-export const editorialMembers = [
-  ["Цимбал Петро Васильович", "Головний редактор", "Україна", "ORCID", "p.tsymbal@e-u.edu.ua"],
-  ["Тимошенко Ольга Анатоліївна", "Заступник головного редактора", "Україна", "Scopus ID", "olga.tymoshenko@e-u.edu.ua"],
-  ["Антошкіна Валерія Костянтинівна", "Член редколегії", "Україна", "ORCID", ""],
-  ["Kravchuk Petro Yuriiovych", "Член редколегії", "Україна", "Scopus ID", ""],
-  ["Basysta Iryna Volodymyrivna", "Член редколегії", "Україна", "ORCID", ""],
-  ["Blachnio-Parzych Anna", "Член редколегії", "Польща", "ResearcherID", ""],
-  ["Carlson Laura", "Член редколегії", "Швеція", "ORCID", ""],
-  ["Ondrej Málek", "Член редколегії", "Чехія", "ResearcherID", ""],
-];
-
 export const indexingServices = [
   { label: "Google Scholar", href: "https://scholar.google.com/" },
   { label: "Crossref", href: "https://www.crossref.org/" },
