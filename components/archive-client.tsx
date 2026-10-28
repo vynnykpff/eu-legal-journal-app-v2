@@ -7,7 +7,7 @@ import { Icon } from "@/components/icons";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select } from "@/components/ui/select";
 import { Tooltip } from "@/components/ui/tooltip";
-import { getLocalizedPath } from "@/lib/data";
+import { getArticleCount, getLocalizedPath } from "@/lib/data";
 import type { Lang, Release } from "@/lib/types";
 
 export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Release[] }) {
@@ -74,7 +74,7 @@ export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Releas
                       <div>
                         <h3 className="text-lg font-bold leading-tight">{release.title}</h3>
                         <div className="mt-0.5 text-sm text-muted">Опубліковано: {release.publicationDate}</div>
-                        <div className="text-sm text-muted">Статті: {release.articles.length}</div>
+                        <div className="text-sm text-muted">Статті: {getArticleCount(release)}</div>
                       </div>
                     </div>
                   </AccordionTrigger>

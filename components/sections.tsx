@@ -3,7 +3,9 @@ import { Badge, ButtonLink, Card, LinkButton } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { JournalCover } from "@/components/cover";
 import { ArchiveClient, IssueTable } from "@/components/archive-client";
-import { bibliographicDatabases, getLocalizedPath, indexingServices, journalTasks, pages } from "@/lib/data";
+import { renderInlineMarkdown } from "@/components/inline-markdown";
+import { normalizeMarkdownSyntax, plainMarkdown } from "@/lib/markdown";
+import { getArticleCount, getLocalizedPath, indexingServices, journalTasks, pages } from "@/lib/data";
 import editorialBoardFallback from "@/lib/editorial-board-fallback.json";
 import type { CmsBlock, Lang, Release, StaticPage } from "@/lib/types";
 
@@ -50,9 +52,9 @@ export function Hero({ submissionPath }: { submissionPath: string }) {
 
 export function HomeCards({ lang, latest, licensePath }: { lang: Lang; latest: Release; licensePath: string }) {
   const cards = [
-    { title: "Поточний випуск", href: getLocalizedPath(lang, "/current-issue"), icon: "book", body: latest.description, cover: true },
+    { title: "Поточний випуск", href: getLocalizedPath(lang, "/current-issue"), icon: "book", body: null, cover: true },
     { title: "Ліцензія", href: licensePath, icon: "file", body: <>Усі статті з 2026 року розповсюджуються на умовах ліцензії <a href="https://creativecommons.org/licenses/by/4.0/" className="font-semibold underline underline-offset-2" target="_blank" rel="noreferrer">Creative Commons Attribution BY 4.0 (CC BY 4.0)</a>.</> },
-    { title: "Індексація", href: getLocalizedPath(lang, "/indexing"), icon: "globe", body: <><DatabaseLinks links={indexingServices} /><span className="mt-3 block font-semibold">Бібліографічні бази даних:</span><DatabaseLinks links={bibliographicDatabases} /></> },
+    { title: "Індексація", href: getLocalizedPath(lang, "/indexing"), icon: "globe", body: indexingServices.map(({ label }) => label).join(", ") },
     { title: "Рубрики Журналу", href: getLocalizedPath(lang, "/journal-rubrics"), icon: "shield", body: "Наукові напрями та рубрики журналу." },
   ];
   return (
@@ -61,16 +63,12 @@ export function HomeCards({ lang, latest, licensePath }: { lang: Lang; latest: R
         <Card key={card.title} className="flex h-full flex-col p-5 transition duration-200 hover:-translate-y-1 hover:border-accent hover:shadow-lg md:p-6">
           <div className="mb-4 flex items-center gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-primary text-white"><Icon name={card.icon} className="h-5 w-5" /></span><h2 className="text-lg font-bold text-primary">{card.title}</h2></div>
           {card.cover && <div className="mb-3 flex gap-4"><JournalCover compact /><div><div className="font-bold">{latest.title}</div><div className="mt-1 text-xs text-muted">Опубліковано: {latest.publicationDate}</div></div></div>}
-          <div className="min-h-14 text-sm leading-6 text-[#33435c]">{card.body}</div>
+          {card.body && <div className="min-h-14 text-sm leading-6 text-[#33435c]">{card.body}</div>}
           <Link className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-semibold text-primary transition hover:gap-3 hover:text-[#0b3d91]" href={card.href}>Детальніше <Icon name="arrow" className="h-4 w-4" /></Link>
         </Card>
       ))}
     </section>
   );
-}
-
-function DatabaseLinks({ links }: { links: { label: string; href: string }[] }) {
-  return <>{links.map((link, index) => <span key={link.href}>{index > 0 && ", "}<a href={link.href} className="underline underline-offset-2 hover:text-primary" target="_blank" rel="noreferrer">{link.label}</a></span>)}.</>;
 }
 
 export function JournalPurpose() {
@@ -98,7 +96,7 @@ export function PageHero({ title, description }: { title: string; description?: 
           <span>{title}</span>
         </nav>
         <h1 className="journal-title text-[2rem] font-bold leading-tight text-primary sm:text-4xl md:text-5xl">{title}</h1>
-        {description && <p className="mt-3 max-w-2xl leading-6 text-[#33435c]">{description}</p>}
+        {description && <p className="mt-3 max-w-2xl leading-6 text-[#33435c]">{renderInlineMarkdown(description)}</p>}
         <div className="mt-5 flex flex-wrap gap-3">
           <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б»</Badge>
           <Badge><Icon name="building" className="h-4 w-4" />Кластер: Право</Badge>
@@ -116,7 +114,7 @@ export function ReleaseCard({ lang, release, showActions = true, showArticles = 
   return (
     <Card className="grid gap-3 p-3 md:grid-cols-[92px_260px_1fr_190px] md:items-center">
       <JournalCover compact />
-      <div><h3 className="text-lg font-bold leading-tight">{release.title}</h3><div className="text-sm text-muted">Опубліковано: {release.publicationDate}</div><div className="text-sm text-muted">Статті: {release.articles.length}</div></div>
+      <div><h3 className="text-lg font-bold leading-tight">{release.title}</h3><div className="text-sm text-muted">Опубліковано: {release.publicationDate}</div><div className="text-sm text-muted">Статті: {getArticleCount(release)}</div></div>
       <div />
       {showActions ? <div className="grid gap-2"><LinkButton href={getLocalizedPath(lang, "/current-issue")}><Icon name="book" className="h-4 w-4" />Переглянути</LinkButton><ButtonLink href={release.pdf ?? "#"} variant="outline"><Icon name="file" className="h-4 w-4" />PDF</ButtonLink></div> : <div />}
       {showArticles && !!release.articles.length && <div className="md:col-span-4 border-t border-border pt-3"><IssueArticles lang={lang} release={release} /></div>}
@@ -268,7 +266,7 @@ function parseEditorialMembers(blocks: { content?: string; items?: string[] }[])
   const lines = blocks
     .flatMap((block) => [block.content, ...(block.items ?? [])])
     .filter((value): value is string => Boolean(value))
-    .flatMap((value) => decodeHtmlEntities(value).replaceAll("\\n", "\n").split(/\n+/))
+    .flatMap((value) => normalizeMarkdownSyntax(value).split(/\n+/))
     .map((line) => line.trim())
     .filter(Boolean);
 
@@ -379,7 +377,7 @@ export function CmsContent({ blocks }: { blocks: CmsBlock[] }) {
           if (block.component.includes("list")) {
             return (
               <ul key={`${block.component}-${index}`} className={`${block.isShowListMarks ? "list-disc pl-6" : "list-none pl-0"}${isExample ? " cms-example-block" : ""}`}>
-                {(block.items ?? []).filter(Boolean).map((item) => <li key={item} className="mb-2">{renderInlineMarkdown(item)}</li>)}
+                {(block.items ?? []).filter(Boolean).map((item) => <li key={item} className="mb-2">{renderInlineMarkdown(item.replace(/^\s*[-*+]\s+/, ""))}</li>)}
               </ul>
             );
           }
@@ -388,7 +386,7 @@ export function CmsContent({ blocks }: { blocks: CmsBlock[] }) {
             return (
               <p key={`${block.component}-${index}`} className="pt-3">
                 <a href={block.link} className="inline-flex rounded-md bg-accent px-5 py-3 font-semibold text-primary no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md" target="_blank" rel="noreferrer">
-                  {block.content ?? "Оплатити"}
+                  {renderInlineMarkdown(block.content ?? "Оплатити")}
                 </a>
               </p>
             );
@@ -397,6 +395,7 @@ export function CmsContent({ blocks }: { blocks: CmsBlock[] }) {
           return (
             <div key={`${block.component}-${index}`} className={`space-y-3${isExample ? " cms-example-block" : ""}`}>
               {normalizeMarkdownSyntax(block.content ?? "").split(/\n{2,}/).filter(Boolean).map((paragraph) => {
+                if (/^\s*(?:[-*_]\s*){3,}\s*$/.test(paragraph)) return null;
                 const isPublicationExemption = /^Виключення є лише для статей здобувачів третього рівня/.test(plainMarkdown(paragraph).trim());
                 const content = renderInlineMarkdown(paragraph.replace(/(?<!\[)Creative Commons Attribution(?: BY)?(?: 4\.0 International)?(?: \(CC BY 4\.0\))?(?![^\[]*\]\()/g, (label) => `[${label}](https://creativecommons.org/licenses/by/4.0/)`));
 
@@ -412,102 +411,4 @@ export function CmsContent({ blocks }: { blocks: CmsBlock[] }) {
       </Card>
     </section>
   );
-}
-
-function plainMarkdown(value: string) {
-  return normalizeMarkdownSyntax(value)
-    .replace(/^#{1,6}\s*/gm, "")
-    .replace(/\[([\s\S]*?)\]\(([\s\S]*?)\)/g, "$1")
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/__([^_]+)__/g, "$1")
-    .replace(/\\\[/g, "[")
-    .replace(/\\\]/g, "]");
-}
-
-function renderInlineMarkdown(value: string) {
-  const cleanValue = normalizeMarkdownSyntax(value);
-  const parts = splitInlineMarkdown(cleanValue);
-
-  return parts.map((part, index) => {
-    if (part === "\n") return <br key={`${part}-${index}`} />;
-
-    const boldLink = part.match(/^(?:\*\*|__)\[([\s\S]*)\]\(([\s\S]*?)\)(?:\*\*|__)$/);
-    if (boldLink) {
-      return (
-        <a key={`${part}-${index}`} href={boldLink[2]} className="font-semibold text-primary underline underline-offset-2" target={boldLink[2].startsWith("http") ? "_blank" : undefined} rel={boldLink[2].startsWith("http") ? "noreferrer" : undefined}>
-          <strong>{renderInlineMarkdown(boldLink[1])}</strong>
-        </a>
-      );
-    }
-
-    const link = part.match(/^\[([\s\S]*)\]\(([\s\S]*?)\)$/);
-    if (link) {
-      return (
-        <a key={`${part}-${index}`} href={link[2]} className={link[1].toLowerCase().includes("оплат") ? "inline-flex rounded-md bg-accent px-4 py-2 font-semibold text-primary no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md" : "font-semibold text-primary underline underline-offset-2"} target={link[2].startsWith("http") ? "_blank" : undefined} rel={link[2].startsWith("http") ? "noreferrer" : undefined}>
-          {renderInlineMarkdown(link[1])}
-        </a>
-      );
-    }
-
-    const bold = part.match(/^(?:\*\*([\s\S]*?)\*\*|__([^_]+)__)$/);
-    if (bold) return <strong key={`${part}-${index}`}>{renderInlineMarkdown(bold[1] ?? bold[2])}</strong>;
-
-    return <span key={`${part}-${index}`}>{plainMarkdown(part)}</span>;
-  });
-}
-
-function normalizeMarkdownSyntax(value: string) {
-  return decodeHtmlEntities(value)
-    .replaceAll("\\n", "\n")
-    .replace(/\\\r?\n/g, "\n")
-    .replace(/\\([\[\]()])/g, "$1")
-    .replace(/\]\s+\(/g, "](");
-}
-
-function splitInlineMarkdown(value: string) {
-  const parts: string[] = [];
-  let index = 0;
-
-  while (index < value.length) {
-    const nextLink = value.indexOf("](", index);
-    if (nextLink === -1) break;
-
-    let labelStart = nextLink - 1;
-    while (labelStart >= index && value[labelStart] !== "[") labelStart -= 1;
-    if (labelStart < index) {
-      index = nextLink + 2;
-      continue;
-    }
-
-    const hrefEnd = value.indexOf(")", nextLink + 2);
-    if (hrefEnd === -1) break;
-
-    const isBoldWrapped = value.slice(labelStart - 2, labelStart) === "**" && value.slice(hrefEnd + 1, hrefEnd + 3) === "**";
-    const isStrongWrapped = value.slice(labelStart - 2, labelStart) === "__" && value.slice(hrefEnd + 1, hrefEnd + 3) === "__";
-    const tokenStart = isBoldWrapped || isStrongWrapped ? labelStart - 2 : labelStart;
-    const tokenEnd = isBoldWrapped || isStrongWrapped ? hrefEnd + 3 : hrefEnd + 1;
-
-    if (tokenStart > index) parts.push(...splitTextMarkdown(value.slice(index, tokenStart)));
-    parts.push(value.slice(tokenStart, tokenEnd));
-    index = tokenEnd;
-  }
-
-  if (index < value.length) parts.push(...splitTextMarkdown(value.slice(index)));
-  return parts.filter(Boolean);
-}
-
-function splitTextMarkdown(value: string) {
-  return value.split(/(\*\*[\s\S]*?\*\*|__[^_]+__|\n)/g).filter(Boolean);
-}
-
-function decodeHtmlEntities(value: string) {
-  return value
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
-    .replace(/&#(\d+);/g, (_, decimal: string) => String.fromCodePoint(parseInt(decimal, 10)))
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, "\"")
-    .replace(/&#39;/g, "'");
 }

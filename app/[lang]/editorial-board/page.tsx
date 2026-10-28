@@ -9,7 +9,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string 
 
   return (
     <Shell lang={lang} active="/editorial-board">
-      <PageHero title="Редакційна колегія" description="Редакційна колегія забезпечує наукову якість, незалежність та об'єктивність публікацій у «Європейському правничому часописі»." />
+      <PageHero title="Редакційна колегія" />
       {page ? <CmsEditorialBoard blocks={page.content} /> : <EditorialBoard />}
     </Shell>
   );
