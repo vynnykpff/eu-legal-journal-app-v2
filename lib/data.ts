@@ -50,18 +50,10 @@ export const fallbackReleases: Release[] = [
 ];
 
 export const indexingServices = [
-  { label: "Google Scholar", href: "https://scholar.google.com/" },
-  { label: "Crossref", href: "https://www.crossref.org/" },
-  { label: "ORCID", href: "https://orcid.org/" },
-  { label: "ROAD", href: "https://road.issn.org/" },
-  { label: "BASE", href: "https://www.base-search.net/" },
-];
-
-export const bibliographicDatabases = [
-  { label: "Національна бібліотека України імені В.І. Вернадського", href: "https://www.nbuv.gov.ua/" },
-  indexingServices[0],
-  indexingServices[1],
-  { label: "Інституційний репозиторій ПВНЗ «Європейський університет»", href: "https://dspace.e-u.edu.ua/" },
+  { label: "Наукова періодика України", detailLabel: "Наукова періодика України (Національна бібліотека України імені В.І. Вернадського)", href: "http://www.irbis-nbuv.gov.ua/cgi-bin/irbis_nbuv/cgiirbis_64.exe?Z21ID=&I21DBN=UJRN&P21DBN=UJRN&S21STN=1&S21REF=10&S21FMT=juu_all&C21COM=S&S21CNR=20&S21P01=0&S21P02=0&S21P03=PREF=&S21COLORTERMS=0&S21STR=elj" },
+  { label: "Google Scholar", href: "https://scholar.google.com.ua/scholar?as_publication=Європейський+правничий+часопис&hl=uk" },
+  { label: "CrossRef", href: "https://www.crossref.org/" },
+  { label: "Інституційний репозиторій ПВНЗ «Європейський університет»", href: "http://dspace.e-u.edu.ua/handle/123456789/28" },
 ];
 
 export const journalRubrics = [
@@ -89,7 +81,7 @@ export const journalTasks = [
 export const pages: Record<string, StaticPage> = {
   "/authors": { title: "Для авторів", description: "Вимоги до оформлення, рецензування та подання матеріалів.", path: "/authors", sections: [{ heading: "Вимоги до оформлення статей", body: ["Матеріали подаються українською або англійською мовою з анотаціями, ключовими словами та списком використаних джерел.", "Обсяг, структура та бібліографія мають відповідати чинним редакційним вимогам журналу."] }, { heading: "Процес рецензування", body: ["Усі наукові статті проходять попередню перевірку редакцією та незалежне рецензування.", "Редакція повідомляє автора про рішення і за потреби надсилає рекомендації щодо доопрацювання."] }] },
   "/publication-ethics": { title: "Етика публікацій", description: "Редакційна політика, рецензування, відкритий доступ і запобігання плагіату.", path: "/publication-ethics", sections: [{ heading: "Етичні принципи", body: ["Журнал дотримується принципів академічної доброчесності, прозорості редакційних процедур і поваги до авторських прав."] }, { heading: "Політика щодо плагіату", body: ["Матеріали перевіряються на ознаки текстових запозичень. Рукописи з недоброчесними практиками не допускаються до публікації."] }] },
-  "/indexing": { title: "Індексація", description: "Журнал індексується та представлений у наукометричних і довідкових базах.", path: "/indexing", sections: [{ heading: "Індексація", body: indexingServices.map(({ label, href }) => `[${label}](${href})`), list: true }, { heading: "Бібліографічні бази даних", body: bibliographicDatabases.map(({ label, href }) => `[${label}](${href})`), list: true }] },
+  "/indexing": { title: "Індексація", description: "", path: "/indexing", sections: [{ heading: "Індексація в наукометричних базах даних:", body: indexingServices.map(({ label, detailLabel, href }) => `[${detailLabel ?? label}](${href})`), list: true }] },
   "/journal-rubrics": { title: "Рубрики журналу", description: "", path: "/journal-rubrics", sections: [{ heading: "Рубрики журналу", body: journalRubrics, list: true }] },
   "/open-access": { title: "Політика відкритого доступу та тип ліцензування на використання обʼєктів авторського права", description: "", path: "/open-access", sections: [{ heading: "Відкритий доступ і ліцензування", body: ["Усі статті з 2026 року розповсюджуються на умовах ліцензії [Creative Commons Attribution BY 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)."] }] },
   "/publication-requirements": { title: "Вимоги до публікацій", description: "", path: "/publication-requirements", sections: [{ heading: "Вимоги до оформлення статей", body: ["Матеріали подаються українською або англійською мовою з анотаціями, ключовими словами та списком використаних джерел.", "Обсяг, структура та бібліографія мають відповідати чинним редакційним вимогам журналу."] }, { heading: "Процес рецензування", body: ["Усі наукові статті проходять попередню перевірку редакцією та незалежне рецензування.", "Редакція повідомляє автора про рішення і за потреби надсилає рекомендації щодо доопрацювання."] }] },
@@ -102,4 +94,11 @@ export function getLocalizedPath(lang: Lang, href: string) {
 
 export function getAllArticles(releases: Release[] = fallbackReleases): Article[] {
   return releases.flatMap((release) => release.articles.map((article) => ({ ...article, publishedAt: release.publicationDate })));
+}
+
+export function getArticleCount(release: Release): number {
+  // Keep front matter available in the issue, but exclude it from the article count.
+  return release.articles.filter((article) => !/^(титул|титулка|титульна сторінка|зміст|contents|table of contents|title page|cover)$/i.test(
+    article.title.trim().replace(/^с(?=ontents$)/i, "c"),
+  )).length;
 }

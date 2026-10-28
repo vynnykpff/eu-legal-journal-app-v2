@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
+import { IdentifierLink, ReferenceCitation } from "@/components/article-links";
 import { Shell } from "@/components/layout";
 import { PageHero } from "@/components/sections";
 import { Card, ButtonLink } from "@/components/ui";
@@ -19,7 +21,6 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
         abstract: "Abstract",
         authors: "Authors",
         affiliation: "Affiliation",
-        fullText: "Full article text",
         info: "Article details",
         issue: "Issue",
         journal: "Journal",
@@ -27,13 +28,11 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
         pages: "Pages",
         published: "Publication date",
         references: "References",
-        download: "Download PDF",
       }
     : {
         abstract: "Анотація",
         authors: "Автори",
         affiliation: "Афіліація",
-        fullText: "Повний текст статті",
         info: "Інформація",
         issue: "Випуск",
         journal: "Журнал",
@@ -41,7 +40,6 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
         pages: "Сторінки",
         published: "Дата публікації",
         references: "Список джерел",
-        download: "Завантажити PDF",
       };
   const authorNames = article.structuredAuthors?.length
     ? article.structuredAuthors.map((author) => [author.given_name, author.family_name].filter(Boolean).join(" ")).filter(Boolean).join(", ")
@@ -54,7 +52,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
         <Card className="prose-journal p-6">
           <dl className="mb-7 grid gap-3 border-b border-border pb-6 sm:grid-cols-2">
             <ArticleDetail label={labels.authors} value={authorNames} />
-            <ArticleDetail label="DOI" value={article.doi} />
+            <ArticleDetail label="DOI" value={article.doi && <IdentifierLink type="doi" value={article.doi} />} />
             <ArticleDetail label={labels.journal} value={article.journalTitle ?? "Європейський правничий часопис"} />
             <ArticleDetail label={labels.issue} value={article.issue} />
             <ArticleDetail label={labels.pages} value={article.pages} />
@@ -68,7 +66,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
                 {article.structuredAuthors.map((author, index) => (
                   <li className="list-none rounded-md border border-border bg-[#f8fafd] p-4" key={`${author.family_name}-${index}`}>
                     <strong>{[author.given_name, author.family_name].filter(Boolean).join(" ")}</strong>
-                    {author.orcid && <a className="ml-3 text-primary underline underline-offset-2" href={author.orcid} target="_blank" rel="noreferrer">ORCID</a>}
+                    {author.orcid && <div className="mt-1"><IdentifierLink type="orcid" value={author.orcid} /></div>}
                     {author.affiliation && <div className="mt-1 text-sm text-muted">{labels.affiliation}: {author.affiliation}</div>}
                   </li>
                 ))}
@@ -84,31 +82,6 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
           )}
           {article.keywords && <p><b>{labels.keywords}:</b> {article.keywords}</p>}
 
-          {!!article.fullText?.length ? (
-            <>
-              <h2>{labels.fullText}</h2>
-              <div className="space-y-4">
-                {article.fullText.map((paragraph, index) => (
-                  <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <h2>{labels.fullText}</h2>
-              <div className="rounded-md border border-border bg-[#f8fafd] p-5">
-                <p className="m-0">
-                  Текст статті буде доступний після обробки PDF або оновлення даних у CMS. PDF-файл можна відкрити окремо.
-                </p>
-                {article.file && (
-                  <a className="mt-4 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-primary no-underline transition hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md" href={article.file} target="_blank" rel="noreferrer">
-                    <Icon name="file" className="h-4 w-4" />{labels.download}
-                  </a>
-                )}
-              </div>
-            </>
-          )}
-
           <h2>Бібліографічні дані</h2>
           <p>{article.authors}. {article.title}. Європейський правничий часопис. {article.publishedAt}. С. {article.pages || "—"}.</p>
 
@@ -117,7 +90,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
               <h2>{labels.references}</h2>
               <ol className="list-decimal space-y-2 pl-5">
                 {article.references.map((reference, index) => (
-                  <li key={reference.key ?? index}>{reference.unstructured_citation ?? reference.doi}</li>
+                  <li key={reference.key ?? index}><ReferenceCitation reference={reference} /></li>
                 ))}
               </ol>
             </>
@@ -128,7 +101,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
           <div className="space-y-3 text-sm">
             <div><b>{labels.authors}</b><br />{authorNames || "-"}</div>
             <div><b>{labels.pages}</b><br />{article.pages || "-"}</div>
-            <div><b>DOI</b><br />{article.doi ?? "-"}</div>
+            <div><b>DOI</b><br />{article.doi ? <IdentifierLink type="doi" value={article.doi} /> : "-"}</div>
           </div>
           {!!article.structuredAuthors?.length && (
             <div className="mt-5 border-t border-border pt-4">
@@ -137,7 +110,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
                 {article.structuredAuthors.map((author, index) => (
                   <div key={`${author.family_name}-${index}`}>
                     <div className="font-semibold">{[author.given_name, author.family_name].filter(Boolean).join(" ")}</div>
-                    {author.orcid && <a className="text-primary underline underline-offset-2" href={author.orcid} target="_blank" rel="noreferrer">ORCID</a>}
+                    {author.orcid && <IdentifierLink type="orcid" value={author.orcid} />}
                     {author.affiliation && <div className="text-muted">{author.affiliation}</div>}
                   </div>
                 ))}
@@ -152,7 +125,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
   );
 }
 
-function ArticleDetail({ label, value }: { label: string; value?: string }) {
+function ArticleDetail({ label, value }: { label: string; value?: ReactNode }) {
   if (!value) return null;
 
   return (

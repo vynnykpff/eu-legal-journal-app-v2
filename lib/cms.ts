@@ -1,4 +1,5 @@
 import { fallbackReleases, getAllArticles } from "@/lib/data";
+import { plainMarkdown } from "@/lib/markdown";
 import type { Article, CmsPage, Lang, MenuItem, Release, SiteSettings } from "@/lib/types";
 
 const CMS_URL =
@@ -75,7 +76,7 @@ export async function getReleases(lang: Lang): Promise<Release[]> {
 
 export async function getArticle(lang: Lang, slug: string): Promise<Article | null> {
   const remoteArticle = await getCrossrefArticle(lang, slug);
-  if (remoteArticle) return hydrateArticleText(remoteArticle);
+  if (remoteArticle) return remoteArticle;
 
   const releases = await getReleases(lang);
   const article = getAllArticles(releases).find((item) => (
@@ -85,45 +86,7 @@ export async function getArticle(lang: Lang, slug: string): Promise<Article | nu
   )) ?? null;
   if (!article) return null;
 
-  return hydrateArticleText(article);
-}
-
-async function hydrateArticleText(article: Article): Promise<Article> {
-  if (article.file && !article.fullText?.length) {
-    return {
-      ...article,
-      fullText: await extractPdfText(article.file),
-    };
-  }
-
   return article;
-}
-
-async function extractPdfText(file: string): Promise<string[] | undefined> {
-  try {
-    const response = await fetch(file, { cache: "no-store" });
-    if (!response.ok) return undefined;
-
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: Buffer.from(await response.arrayBuffer()) });
-    const result = await parser.getText();
-    await parser.destroy();
-
-    return normalizePdfText(result.text);
-  } catch {
-    return undefined;
-  }
-}
-
-function normalizePdfText(text: string): string[] {
-  return text
-    .replace(/\r/g, "\n")
-    .replace(/-\n(?=\p{Ll})/gu, "")
-    .replace(/(?<![.!?:;])\n(?!\n)/g, " ")
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
-    .filter((paragraph) => paragraph.length > 20)
-    .slice(0, 80);
 }
 
 async function getCrossrefArticle(lang: Lang, slug: string): Promise<Article | null> {
@@ -215,7 +178,7 @@ export async function getCmsPages(lang: Lang): Promise<CmsPage[]> {
       title: String(page.title ?? titleFromPath(String(page.url ?? ""))),
       url: normalizeCmsLink(lang, String(page.url ?? "")),
       description: content.find((block) => String(attrs(block).__component ?? "").includes("text"))
-        ? String(attrs(content.find((block) => String(attrs(block).__component ?? "").includes("text")) ?? {}).content ?? "").slice(0, 180)
+        ? plainMarkdown(String(attrs(content.find((block) => String(attrs(block).__component ?? "").includes("text")) ?? {}).content ?? "")).slice(0, 180)
         : "",
       content: content.map((block) => {
         const normalized = attrs(block);
