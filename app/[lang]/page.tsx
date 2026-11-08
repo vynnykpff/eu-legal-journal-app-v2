@@ -12,9 +12,9 @@ export default async function Page({ params }: { params: Promise<{ lang: string 
 
   return (
     <Shell lang={lang} active="/">
-      <Hero submissionPath={submissionPath} />
+      <Hero lang={lang} submissionPath={submissionPath} />
       <HomeCards lang={lang} latest={releases[0]} licensePath={licensePath} />
-      <JournalPurpose />
+      <JournalPurpose lang={lang} />
     </Shell>
   );
 }

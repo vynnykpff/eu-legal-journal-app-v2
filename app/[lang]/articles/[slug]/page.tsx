@@ -6,6 +6,7 @@ import { PageHero } from "@/components/sections";
 import { Card, ButtonLink } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { BackToTop } from "@/components/back-to-top";
+import { formatDate, getDictionary } from "@/lib/i18n";
 import { getArticle } from "@/lib/cms";
 import { getLang } from "@/lib/routing";
 
@@ -16,47 +17,31 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
 
   if (!article) notFound();
 
-  const labels = lang === "en"
-    ? {
-        abstract: "Abstract",
-        authors: "Authors",
-        affiliation: "Affiliation",
-        info: "Article details",
-        issue: "Issue",
-        journal: "Journal",
-        keywords: "Keywords",
-        pages: "Pages",
-        published: "Publication date",
-        references: "References",
-      }
-    : {
-        abstract: "Анотація",
-        authors: "Автори",
-        affiliation: "Афіліація",
-        info: "Інформація",
-        issue: "Випуск",
-        journal: "Журнал",
-        keywords: "Ключові слова",
-        pages: "Сторінки",
-        published: "Дата публікації",
-        references: "Список джерел",
-      };
+  const dict = getDictionary(lang);
+  const labels = dict.article;
   const authorNames = article.structuredAuthors?.length
     ? article.structuredAuthors.map((author) => [author.given_name, author.family_name].filter(Boolean).join(" ")).filter(Boolean).join(", ")
     : article.authors;
 
   return (
     <Shell lang={lang}>
-      <PageHero title={article.title} description={article.authors || "Наукова стаття Європейського правничого часопису."} />
+      <PageHero lang={lang} title={article.title} description={article.authors || labels.fallbackDescription} />
+      {article.contentLang && article.contentLang !== lang && (
+        <section className="container mt-7">
+          <Card className="border-l-4 border-l-accent p-4 text-sm leading-6" role="note">
+            {labels.originalLanguageNotice}
+          </Card>
+        </section>
+      )}
       <section className="container mt-7 grid gap-6 lg:grid-cols-[1fr_280px]">
         <Card className="prose-journal p-6">
           <dl className="mb-7 grid gap-3 border-b border-border pb-6 sm:grid-cols-2">
             <ArticleDetail label={labels.authors} value={authorNames} />
             <ArticleDetail label="DOI" value={article.doi && <IdentifierLink type="doi" value={article.doi} />} />
-            <ArticleDetail label={labels.journal} value={article.journalTitle ?? "Європейський правничий часопис"} />
+            <ArticleDetail label={labels.journal} value={article.journalTitle ?? dict.journal.name} />
             <ArticleDetail label={labels.issue} value={article.issue} />
             <ArticleDetail label={labels.pages} value={article.pages} />
-            <ArticleDetail label={labels.published} value={article.publishedAt} />
+            <ArticleDetail label={labels.published} value={formatDate(lang, article.publishedAt)} />
           </dl>
 
           {!!article.structuredAuthors?.length && (
@@ -82,8 +67,8 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
           )}
           {article.keywords && <p><b>{labels.keywords}:</b> {article.keywords}</p>}
 
-          <h2>Бібліографічні дані</h2>
-          <p>{article.authors}. {article.title}. Європейський правничий часопис. {article.publishedAt}. С. {article.pages || "—"}.</p>
+          <h2>{labels.citation}</h2>
+          <p>{article.authors}. {article.title}. {article.journalTitle ?? dict.journal.name}. {formatDate(lang, article.publishedAt)}. {dict.common.pagesShort} {article.pages || "—"}.</p>
 
           {!!article.references?.length && (
             <>
@@ -105,7 +90,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
           </div>
           {!!article.structuredAuthors?.length && (
             <div className="mt-5 border-t border-border pt-4">
-              <h3 className="mb-3 text-sm font-bold">Авторські ідентифікатори</h3>
+              <h3 className="mb-3 text-sm font-bold">{labels.identifiers}</h3>
               <div className="space-y-3 text-sm">
                 {article.structuredAuthors.map((author, index) => (
                   <div key={`${author.family_name}-${index}`}>
@@ -120,7 +105,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
           {article.file && <ButtonLink className="mt-5 w-full" href={article.file}><Icon name="file" className="h-4 w-4" />PDF</ButtonLink>}
         </Card>
       </section>
-      <BackToTop label={lang === "en" ? "Back to top" : "До початку"} />
+      <BackToTop label={labels.backToTop} />
     </Shell>
   );
 }

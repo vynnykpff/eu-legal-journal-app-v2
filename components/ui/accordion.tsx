@@ -51,7 +51,7 @@ export function AccordionItem({ value, children, className, ...props }: Componen
   );
 }
 
-export function AccordionTrigger({ children, className }: { children: ReactNode; className?: string }) {
+export function AccordionTrigger({ children, className, expandLabel, collapseLabel }: { children: ReactNode; className?: string; expandLabel: string; collapseLabel: string }) {
   const context = useContext(AccordionContext);
   const item = useContext(AccordionItemContext);
   if (!context || !item) throw new Error("AccordionTrigger must be used inside AccordionItem");
@@ -66,7 +66,7 @@ export function AccordionTrigger({ children, className }: { children: ReactNode;
       onClick={() => context.setValue(item.isOpen ? null : item.value)}
     >
       {children}
-      <span className="ml-4 grid h-12 w-12 shrink-0 place-items-center self-center rounded-full border border-border bg-white text-primary transition group-hover:border-accent group-hover:bg-accent-soft" title={item.isOpen ? "Згорнути випуск" : "Розгорнути випуск"}>
+      <span className="ml-4 grid h-12 w-12 shrink-0 place-items-center self-center rounded-full border border-border bg-white text-primary transition group-hover:border-accent group-hover:bg-accent-soft" title={item.isOpen ? collapseLabel : expandLabel}>
         <svg className={cn("h-5 w-5 transition-transform duration-300 ease-out", item.isOpen && "rotate-180")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="m6 9 6 6 6-6" />
         </svg>

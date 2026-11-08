@@ -16,18 +16,18 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
   if (cmsPage) {
     return (
       <Shell lang={lang}>
-        <PageHero title={cmsPage.title} description={isPolicy || isAuthorPage ? undefined : cmsPage.description} />
-        <CmsContent blocks={cmsPage.content} />
+        <PageHero lang={lang} title={cmsPage.title} description={isPolicy || isAuthorPage ? undefined : cmsPage.description} />
+        <CmsContent lang={lang} blocks={cmsPage.content} />
       </Shell>
     );
   }
 
-  const staticPage = getStaticPage(`/${resolved.slug.join("/")}`);
+  const staticPage = getStaticPage(lang, `/${resolved.slug.join("/")}`);
   if (!staticPage) notFound();
 
   return (
     <Shell lang={lang}>
-      <PageHero title={staticPage.title} description={staticPage.description} />
+      <PageHero lang={lang} title={staticPage.title} description={staticPage.description} />
       <StaticContent page={staticPage} />
     </Shell>
   );

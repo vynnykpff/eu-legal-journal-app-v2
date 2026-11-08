@@ -19,7 +19,7 @@ export function renderInlineMarkdown(value: string) {
     const link = part.match(/^\[([\s\S]*)\]\(([\s\S]*?)\)$/);
     if (link) {
       return (
-        <a key={`${part}-${index}`} href={link[2]} className={link[1].toLowerCase().includes("оплат") ? "inline-flex rounded-md bg-accent px-4 py-2 font-semibold text-primary no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md" : "font-semibold text-primary underline underline-offset-2"} target={link[2].startsWith("http") ? "_blank" : undefined} rel={link[2].startsWith("http") ? "noreferrer" : undefined}>
+        <a key={`${part}-${index}`} href={link[2]} className={/оплат|^pay(?:ment)?(?:\s|$)/i.test(link[1]) ? "inline-flex rounded-md bg-accent px-4 py-2 font-semibold text-primary no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md" : "font-semibold text-primary underline underline-offset-2"} target={link[2].startsWith("http") ? "_blank" : undefined} rel={link[2].startsWith("http") ? "noreferrer" : undefined}>
           {renderInlineMarkdown(link[1])}
         </a>
       );

@@ -7,37 +7,40 @@ import { renderInlineMarkdown } from "@/components/inline-markdown";
 import { normalizeMarkdownSyntax, plainMarkdown } from "@/lib/markdown";
 import { getArticleCount, getLocalizedPath, indexingServices, journalTasks, pages } from "@/lib/data";
 import editorialBoardFallback from "@/lib/editorial-board-fallback.json";
+import editorialBoardFallbackEn from "@/lib/editorial-board-fallback.en.json";
+import { formatDate, getDictionary } from "@/lib/i18n";
 import type { CmsBlock, Lang, Release, StaticPage } from "@/lib/types";
 
-export function Hero({ submissionPath }: { submissionPath: string }) {
+export function Hero({ lang, submissionPath }: { lang: Lang; submissionPath: string }) {
+  const dict = getDictionary(lang);
   return (
     <section className="watermark border-b border-border py-7 md:py-10">
       <div className="container grid gap-7 xl:grid-cols-[minmax(0,1fr)_320px_300px] lg:gap-8">
         <div className="pt-2 md:pt-4">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-accent sm:text-sm">Науковий журнал</div>
-          <h1 className="journal-title text-4xl font-bold leading-tight text-primary sm:text-5xl md:text-6xl">Європейський<br />правничий часопис</h1>
-          <p className="mt-3 text-xl font-semibold uppercase tracking-[0.16em] text-[#4a5365]">European Legal Journal</p>
-          <p className="mt-5 max-w-xl text-base leading-7 text-[#33435c]">Журнал включено до Переліку наукових фахових видань України (категорія «Б») відповідно до наказу МОН України від 11 червня 2026 року № 928 (Додаток 14) зі спеціальностей: D8 Право, D9 Міжнародне право.</p>
+          <div className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-accent sm:text-sm">{dict.hero.eyebrow}</div>
+          <h1 className="journal-title text-4xl font-bold leading-tight text-primary sm:text-5xl md:text-6xl">{dict.hero.titleLines[0]}<br />{dict.hero.titleLines[1]}</h1>
+          {dict.hero.subtitle && <p className="mt-3 text-xl font-semibold uppercase tracking-[0.16em] text-[#4a5365]">{dict.hero.subtitle}</p>}
+          <p className="mt-5 max-w-xl text-base leading-7 text-[#33435c]">{dict.hero.listing}</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б»</Badge>
-            <Badge><Icon name="building" className="h-4 w-4" />Кластер: Право</Badge>
+            <Badge><Icon name="star" className="h-4 w-4 text-accent" />{dict.badges.category}</Badge>
+            <Badge><Icon name="building" className="h-4 w-4" />{dict.badges.cluster}</Badge>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            <LinkButton href={submissionPath}><Icon name="file" className="h-4 w-4" />Подати статтю</LinkButton>
+            <LinkButton href={submissionPath}><Icon name="file" className="h-4 w-4" />{dict.hero.submit}</LinkButton>
           </div>
         </div>
-        <div className="justify-self-center"><JournalCover /></div>
+        <div className="justify-self-center"><JournalCover lang={lang} /></div>
         <Card className="h-fit p-5">
-          <h2 className="mb-4 text-lg font-bold">Про видання</h2>
+          <h2 className="mb-4 text-lg font-bold">{dict.hero.aboutTitle}</h2>
           {[
-            ["building", "Засновник та видавець", "ПВНЗ «Європейський університет»"],
-            ["building", "Код за ЄДРПОУ видавця", "24366800"],
-            ["calendar", "Рік заснування", "2023"],
-            ["clock", "Періодичність", "У міру накопичення"],
-            ["globe", "Мови публікацій", "Українська, англійська"],
-            ["link", "DOI prefix", "10.36919"],
-            ["link", "ROR видавця", "https://ror.org/032s10s29"],
-            ["file", "Ідентифікатор медіа", "R30-01886"],
+            ["building", ...dict.hero.facts.publisher],
+            ["building", ...dict.hero.facts.edrpou],
+            ["calendar", ...dict.hero.facts.founded],
+            ["clock", ...dict.hero.facts.frequency],
+            ["globe", ...dict.hero.facts.languages],
+            ["link", ...dict.hero.facts.doi],
+            ["link", ...dict.hero.facts.ror],
+            ["file", ...dict.hero.facts.media],
           ].map(([icon, label, value]) => (
             <div key={label} className="flex gap-3 border-b border-border py-3 last:border-0">
               <Icon name={icon} className="mt-1 h-5 w-5 text-primary" />
@@ -51,55 +54,58 @@ export function Hero({ submissionPath }: { submissionPath: string }) {
 }
 
 export function HomeCards({ lang, latest, licensePath }: { lang: Lang; latest: Release; licensePath: string }) {
+  const dict = getDictionary(lang);
   const cards = [
-    { title: "Поточний випуск", href: getLocalizedPath(lang, "/current-issue"), icon: "book", body: null, cover: true },
-    { title: "Ліцензія", href: licensePath, icon: "file", body: <>Усі статті з 2026 року розповсюджуються на умовах ліцензії <a href="https://creativecommons.org/licenses/by/4.0/" className="font-semibold underline underline-offset-2" target="_blank" rel="noreferrer">Creative Commons Attribution BY 4.0 (CC BY 4.0)</a>.</> },
-    { title: "Індексація", href: getLocalizedPath(lang, "/indexing"), icon: "globe", body: indexingServices.map(({ label }) => label).join(", ") },
-    { title: "Рубрики Журналу", href: getLocalizedPath(lang, "/journal-rubrics"), icon: "shield", body: "Наукові напрями та рубрики журналу." },
+    { title: dict.homeCards.currentIssue, href: getLocalizedPath(lang, "/current-issue"), icon: "book", body: null, cover: true },
+    { title: dict.homeCards.license, href: licensePath, icon: "file", body: <>{dict.homeCards.licenseBody}{" "}<a href="https://creativecommons.org/licenses/by/4.0/" className="font-semibold underline underline-offset-2" target="_blank" rel="noreferrer">Creative Commons Attribution BY 4.0 (CC BY 4.0)</a>.</> },
+    { title: dict.homeCards.indexing, href: getLocalizedPath(lang, "/indexing"), icon: "globe", body: indexingServices[lang].map(({ label }) => label).join(", ") },
+    { title: dict.homeCards.rubrics, href: getLocalizedPath(lang, "/journal-rubrics"), icon: "shield", body: dict.homeCards.rubricsBody },
   ];
   return (
     <section className="container mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
         <Card key={card.title} className="flex h-full flex-col p-5 transition duration-200 hover:-translate-y-1 hover:border-accent hover:shadow-lg md:p-6">
           <div className="mb-4 flex items-center gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-primary text-white"><Icon name={card.icon} className="h-5 w-5" /></span><h2 className="text-lg font-bold text-primary">{card.title}</h2></div>
-          {card.cover && <div className="mb-3 flex gap-4"><JournalCover compact /><div><div className="font-bold">{latest.title}</div><div className="mt-1 text-xs text-muted">Опубліковано: {latest.publicationDate}</div></div></div>}
+          {card.cover && <div className="mb-3 flex gap-4"><JournalCover lang={lang} compact /><div><div className="font-bold">{latest.title}</div><div className="mt-1 text-xs text-muted">{dict.common.published}: {formatDate(lang, latest.publicationDate)}</div></div></div>}
           {card.body && <div className="min-h-14 text-sm leading-6 text-[#33435c]">{card.body}</div>}
-          <Link className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-semibold text-primary transition hover:gap-3 hover:text-[#0b3d91]" href={card.href}>Детальніше <Icon name="arrow" className="h-4 w-4" /></Link>
+          <Link className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-semibold text-primary transition hover:gap-3 hover:text-[#0b3d91]" href={card.href}>{dict.common.learnMore} <Icon name="arrow" className="h-4 w-4" /></Link>
         </Card>
       ))}
     </section>
   );
 }
 
-export function JournalPurpose() {
+export function JournalPurpose({ lang }: { lang: Lang }) {
+  const dict = getDictionary(lang);
   return (
     <section className="container mt-8">
       <Card className="border-l-4 border-l-accent p-5 md:p-6">
-        <h2 className="text-2xl font-bold text-primary">Мета видання</h2>
-        <p className="mt-3 max-w-4xl text-base leading-7 text-[#33435c]">Мета видання - оприлюднення результатів наукових досліджень у галузі права шляхом висвітлення актуальних проблем юридичної науки та практики, а також сприяння вдосконаленню національного законодавства та правозастосовної діяльності. Журнал прагне інтегрувати українську правову думку в європейський та світовий науковий простір.</p>
+        <h2 className="text-2xl font-bold text-primary">{dict.purpose.title}</h2>
+        <p className="mt-3 max-w-4xl text-base leading-7 text-[#33435c]">{dict.purpose.body}</p>
       </Card>
       <div className="mt-6 rounded-md bg-[#edf3ff] px-6 py-5 text-primary">
-        <h2 className="text-xl font-bold">Завдання видання:</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 leading-7">{journalTasks.map((task) => <li key={task}>{task}</li>)}</ul>
+        <h2 className="text-xl font-bold">{dict.purpose.tasksTitle}</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 leading-7">{journalTasks[lang].map((task) => <li key={task}>{task}</li>)}</ul>
       </div>
     </section>
   );
 }
 
-export function PageHero({ title, description }: { title: string; description?: string }) {
+export function PageHero({ lang, title, description }: { lang: Lang; title: string; description?: string }) {
+  const dict = getDictionary(lang);
   return (
     <section className="watermark border-b border-border py-6 md:py-9">
       <div className="container">
-        <nav className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
-          <Link className="transition hover:text-primary hover:underline hover:underline-offset-4" href="/uk/">Головна</Link>
+        <nav className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted" aria-label={dict.common.breadcrumb}>
+          <Link className="transition hover:text-primary hover:underline hover:underline-offset-4" href={getLocalizedPath(lang, "/")}>{dict.common.home}</Link>
           <span>›</span>
           <span>{title}</span>
         </nav>
         <h1 className="journal-title text-[2rem] font-bold leading-tight text-primary sm:text-4xl md:text-5xl">{title}</h1>
         {description && <p className="mt-3 max-w-2xl leading-6 text-[#33435c]">{renderInlineMarkdown(description)}</p>}
         <div className="mt-5 flex flex-wrap gap-3">
-          <Badge><Icon name="star" className="h-4 w-4 text-accent" />Категорія «Б»</Badge>
-          <Badge><Icon name="building" className="h-4 w-4" />Кластер: Право</Badge>
+          <Badge><Icon name="star" className="h-4 w-4 text-accent" />{dict.badges.category}</Badge>
+          <Badge><Icon name="building" className="h-4 w-4" />{dict.badges.cluster}</Badge>
         </div>
       </div>
     </section>
@@ -111,12 +117,13 @@ export function ArchiveList({ lang, releases }: { lang: Lang; releases: Release[
 }
 
 export function ReleaseCard({ lang, release, showActions = true, showArticles = true }: { lang: Lang; release: Release; showActions?: boolean; showArticles?: boolean }) {
+  const dict = getDictionary(lang);
   return (
     <Card className="grid gap-3 p-3 md:grid-cols-[92px_260px_1fr_190px] md:items-center">
-      <JournalCover compact />
-      <div><h3 className="text-lg font-bold leading-tight">{release.title}</h3><div className="text-sm text-muted">Опубліковано: {release.publicationDate}</div><div className="text-sm text-muted">Статті: {getArticleCount(release)}</div></div>
+      <JournalCover lang={lang} compact />
+      <div><h3 className="text-lg font-bold leading-tight">{release.title}</h3><div className="text-sm text-muted">{dict.common.published}: {formatDate(lang, release.publicationDate)}</div><div className="text-sm text-muted">{dict.common.articles}: {getArticleCount(release)}</div></div>
       <div />
-      {showActions ? <div className="grid gap-2"><LinkButton href={getLocalizedPath(lang, "/current-issue")}><Icon name="book" className="h-4 w-4" />Переглянути</LinkButton><ButtonLink href={release.pdf ?? "#"} variant="outline"><Icon name="file" className="h-4 w-4" />PDF</ButtonLink></div> : <div />}
+      {showActions ? <div className="grid gap-2"><LinkButton href={getLocalizedPath(lang, "/current-issue")}><Icon name="book" className="h-4 w-4" />{dict.common.view}</LinkButton><ButtonLink href={release.pdf ?? "#"} variant="outline"><Icon name="file" className="h-4 w-4" />PDF</ButtonLink></div> : <div />}
       {showArticles && !!release.articles.length && <div className="md:col-span-4 border-t border-border pt-3"><IssueArticles lang={lang} release={release} /></div>}
     </Card>
   );
@@ -140,16 +147,17 @@ export function StaticContent({ page }: { page: StaticPage }) {
   );
 }
 
-export function EditorialBoard() {
+export function EditorialBoard({ lang }: { lang: Lang }) {
   // Public CMS snapshot keeps verified profiles available when the CMS is offline.
-  return <CmsEditorialBoard blocks={editorialBoardFallback} />;
+  return <CmsEditorialBoard lang={lang} blocks={lang === "en" ? editorialBoardFallbackEn : editorialBoardFallback} />;
 }
 
-export function CmsEditorialBoard({ blocks }: { blocks: CmsBlock[] }) {
-  const members = parseEditorialMembers(blocks);
+export function CmsEditorialBoard({ lang, blocks }: { lang: Lang; blocks: CmsBlock[] }) {
+  const dict = getDictionary(lang);
+  const members = parseEditorialMembers(blocks, lang);
 
   if (!members.length) {
-    return <CmsContent blocks={blocks} />;
+    return <CmsContent lang={lang} blocks={blocks} />;
   }
 
   const countryCounts = members.reduce<Record<string, number>>((counts, member) => {
@@ -209,12 +217,12 @@ export function CmsEditorialBoard({ blocks }: { blocks: CmsBlock[] }) {
             <Icon name="users" className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="font-bold text-primary">Склад редколегії</h2>
-            <p className="text-sm text-muted">Окремі профілі учасників</p>
+            <h2 className="font-bold text-primary">{dict.editorialBoard.composition}</h2>
+            <p className="text-sm text-muted">{dict.editorialBoard.profiles}</p>
           </div>
         </div>
         <div className="mt-5 rounded-md bg-[#f4f7fb] p-4 text-center">
-          <div className="text-sm text-muted">Загальна кількість членів</div>
+          <div className="text-sm text-muted">{dict.editorialBoard.total}</div>
           <b className="mt-1 block text-4xl text-primary">{members.length}</b>
         </div>
         <div className="mt-5 space-y-3 text-sm">
@@ -262,7 +270,7 @@ type EditorialMemberCard = {
   identifiers: { label: string; href: string }[];
 };
 
-function parseEditorialMembers(blocks: { content?: string; items?: string[] }[]): EditorialMemberCard[] {
+function parseEditorialMembers(blocks: { content?: string; items?: string[] }[], lang: Lang): EditorialMemberCard[] {
   const lines = blocks
     .flatMap((block) => [block.content, ...(block.items ?? [])])
     .filter((value): value is string => Boolean(value))
@@ -304,7 +312,7 @@ function parseEditorialMembers(blocks: { content?: string; items?: string[] }[])
     if (parsed) {
       commit();
       currentMember = {
-        role: currentRole || "Член редакційної колегії",
+        role: currentRole || getDictionary(lang).editorialBoard.defaultRole,
         name: parsed.name,
         bio: parsed.bio,
         country: parsed.country,
@@ -324,7 +332,7 @@ function parseEditorialMembers(blocks: { content?: string; items?: string[] }[])
 }
 
 function isEditorialRole(line: string) {
-  return /^(Головний редактор|Заступник головного редактора|Член(?:и)? редакційної колегії|Editorial board members?|Editor-in-chief|Deputy editor)/i.test(line);
+  return /^(Головний редактор|Заступник головного редактора|Член(?:и)? редакційної колегії|Editorial board members?|Editor-in-chief|Deputy(?: chief)? editor)/i.test(line);
 }
 
 function isIdentifierLine(line: string) {
@@ -344,11 +352,12 @@ function parseMemberLine(line: string) {
   };
 }
 
-export function getStaticPage(path: string) {
-  return pages[path];
+export function getStaticPage(lang: Lang, path: string) {
+  return pages[lang][path];
 }
 
-export function CmsContent({ blocks }: { blocks: CmsBlock[] }) {
+export function CmsContent({ lang, blocks }: { lang: Lang; blocks: CmsBlock[] }) {
+  const dict = getDictionary(lang);
   const exampleStart = blocks.findIndex((block) => block.component.includes("design-example"));
 
   return (
@@ -386,7 +395,7 @@ export function CmsContent({ blocks }: { blocks: CmsBlock[] }) {
             return (
               <p key={`${block.component}-${index}`} className="pt-3">
                 <a href={block.link} className="inline-flex rounded-md bg-accent px-5 py-3 font-semibold text-primary no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e4ad00] hover:shadow-md" target="_blank" rel="noreferrer">
-                  {renderInlineMarkdown(block.content ?? "Оплатити")}
+                  {renderInlineMarkdown(block.content ?? dict.cms.pay)}
                 </a>
               </p>
             );
