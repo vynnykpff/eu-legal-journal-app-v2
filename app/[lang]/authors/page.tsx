@@ -5,12 +5,12 @@ import { getLang } from "@/lib/routing";
 
 export default async function Page({ params }: { params: Promise<{ lang: string }> }) {
   const lang = await getLang(params);
-  const page = getStaticPage("/authors");
+  const page = getStaticPage(lang, "/authors");
   if (!page) notFound();
 
   return (
     <Shell lang={lang} active="/authors">
-      <PageHero title={page.title} description={page.description} />
+      <PageHero lang={lang} title={page.title} description={page.description} />
       <StaticContent page={page} />
     </Shell>
   );

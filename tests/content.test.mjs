@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import editorialBoardFallbackEn from "../lib/editorial-board-fallback.en.json" with { type: "json" };
 import test from "node:test";
-import { getArticleCount, fallbackReleases, indexingServices, pages } from "../lib/data.ts";
+import { getArticleCount, fallbackReleases, indexingServices, journalTasks, pages } from "../lib/data.ts";
+import { formatDate, getDictionary } from "../lib/i18n.ts";
+import { normalizeCmsLink } from "../lib/cms-links.ts";
 import { getDoiUrl, getOrcidUrl, splitReferenceLinks } from "../lib/article-links.ts";
 import { plainMarkdown } from "../lib/markdown.ts";
 
@@ -13,15 +16,15 @@ test("article counts exclude front matter regardless of case, order or Cyrillic 
 });
 
 test("article-only issues and fallback releases keep their counts", () => {
-  for (const release of fallbackReleases) assert.equal(getArticleCount(release), release.articles.length);
+  for (const release of Object.values(fallbackReleases).flat()) assert.equal(getArticleCount(release), release.articles.length);
   assert.equal(getArticleCount({ articles: [{ title: "Зміст правової норми" }, { title: "Contents of legal education" }] }), 2);
 });
 
 test("indexing has exactly the four requested services and linked detail entries", () => {
-  assert.deepEqual(indexingServices.map(({ label }) => label), ["Наукова періодика України", "Google Scholar", "CrossRef", "Інституційний репозиторій ПВНЗ «Європейський університет»"]);
-  assert.equal(pages["/indexing"].sections.length, 1);
-  assert.equal(pages["/indexing"].sections[0].body.length, 4);
-  assert.match(pages["/indexing"].sections[0].body[0], /Національна бібліотека України імені В\.І\. Вернадського/);
+  assert.deepEqual(indexingServices.uk.map(({ label }) => label), ["Наукова періодика України", "Google Scholar", "CrossRef", "Інституційний репозиторій ПВНЗ «Європейський університет»"]);
+  assert.equal(pages.uk["/indexing"].sections.length, 1);
+  assert.equal(pages.uk["/indexing"].sections[0].body.length, 4);
+  assert.match(pages.uk["/indexing"].sections[0].body[0], /Національна бібліотека України імені В\.І\. Вернадського/);
 });
 
 test("DOI URLs preserve parentheses and normalize resolver prefixes", () => {
@@ -64,4 +67,46 @@ test("CMS summaries strip emphasis markers while preserving meaningful punctuati
   assert.equal(plainMarkdown("_Остаточне рішення._"), "Остаточне рішення.");
   assert.equal(plainMarkdown("[*довідку про автора*](https://example.org/)"), "довідку про автора");
   assert.equal(plainMarkdown("Пн-Пт 09:00 – 17:00; author_name"), "Пн-Пт 09:00 – 17:00; author_name");
+});
+
+test("English interface and fallback content contain no untranslated Ukrainian text", () => {
+  const englishContent = [getDictionary("en"), pages.en, indexingServices.en, journalTasks.en, fallbackReleases.en, editorialBoardFallbackEn];
+  // Original publication names may remain in external database search URLs.
+  const englishText = JSON.stringify(englishContent, (_key, value) => typeof value === "string" ? value.replace(/https?:\/\/\S+/g, "") : value);
+  assert.doesNotMatch(englishText, /[А-Яа-яІіЇїЄєҐґ]/u);
+  assert.deepEqual(Object.keys(pages.en).sort(), Object.keys(pages.uk).sort());
+  for (const path of Object.keys(pages.uk)) {
+    assert.equal(pages.en[path].sections.length, pages.uk[path].sections.length, path);
+  }
+  assert.deepEqual(
+    fallbackReleases.en.map(({ articles }) => articles.map(({ slug, doi, pages }) => ({ slug, doi, pages }))),
+    fallbackReleases.uk.map(({ articles }) => articles.map(({ slug, doi, pages }) => ({ slug, doi, pages }))),
+  );
+});
+
+test("publication dates follow the selected locale without shifting the day", () => {
+  assert.equal(formatDate("en", "2026-05-15"), "15 May 2026");
+  assert.equal(formatDate("uk", "2026-05-15"), "15 травня 2026");
+  assert.equal(formatDate("en", "2026-05-15T00:00:00.000Z"), "15 May 2026");
+  assert.equal(formatDate("en", "2026"), "2026");
+  assert.equal(formatDate("en", "invalid"), "invalid");
+  assert.equal(formatDate("en"), "");
+});
+
+test("CMS menu and page URLs resolve to the same localized editorial policy", () => {
+  for (const path of ["en/editor-policy", "/en/en/editor-policy", "/uk/editorial-policy", "/editorial-policy"]) {
+    assert.equal(normalizeCmsLink("en", path), "/en/editorial-policy");
+    assert.equal(normalizeCmsLink("uk", path), "/uk/editorial-policy");
+  }
+});
+
+test("localized CMS links replace locale prefixes without changing nested paths or URL suffixes", () => {
+  assert.equal(normalizeCmsLink("en", "/uk/requirements-for-publications"), "/en/requirements-for-publications");
+  assert.equal(normalizeCmsLink("uk", "/en/articles/example?source=menu#abstract"), "/uk/articles/example?source=menu#abstract");
+  assert.equal(normalizeCmsLink("en", "/en"), "/en/");
+  assert.equal(normalizeCmsLink("en", "/"), "/en/");
+  assert.equal(normalizeCmsLink("en", "#section"), "#section");
+  assert.equal(normalizeCmsLink("en", ""), "#");
+  assert.equal(normalizeCmsLink("en", "https://example.org/uk/page"), "https://example.org/uk/page");
+  assert.equal(normalizeCmsLink("en", "mailto:legal.journal@e-u.edu.ua"), "mailto:legal.journal@e-u.edu.ua");
 });

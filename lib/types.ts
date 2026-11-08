@@ -1,6 +1,7 @@
 export type Lang = "uk" | "en";
 
 export type Article = {
+  contentLang?: Lang;
   id?: number;
   title: string;
   slug: string;

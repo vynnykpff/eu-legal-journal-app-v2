@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { getDictionary } from "@/lib/i18n";
+import { normalizeCmsLink } from "@/lib/cms-links";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { FormEvent } from "react";
@@ -21,6 +23,7 @@ export function HeaderClient({
   settings: SiteSettings;
   searchEntries: SearchEntry[];
 }) {
+  const dict = getDictionary(lang);
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -36,9 +39,7 @@ export function HeaderClient({
   }, [query, searchEntries]);
 
   const switchLanguage = (nextLang: Lang) => {
-    const parts = pathname.split("/");
-    parts[1] = nextLang;
-    router.push(parts.join("/") || `/${nextLang}/`);
+    router.push(normalizeCmsLink(nextLang, pathname));
   };
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -75,13 +76,13 @@ export function HeaderClient({
   return (
     <header className="bg-white">
       <div className="container flex min-h-[70px] items-center justify-between gap-6 py-3">
-        <Link href={`/${lang}/`} className="block shrink-0" aria-label="Європейський університет">
+        <Link href={`/${lang}/`} className="block shrink-0" aria-label={dict.university.name}>
           {settings.logoHeader ? (
-            <Image src={settings.logoHeader} alt="Європейський університет" width={308} height={54} className="h-auto w-[250px] max-w-[62vw]" unoptimized />
+            <Image src={settings.logoHeader} alt={dict.university.name} width={308} height={54} className="h-auto w-[250px] max-w-[62vw]" unoptimized />
           ) : (
             <div>
-              <div className="text-xl font-bold leading-none text-primary">ЄВРОПЕЙСЬКИЙ</div>
-              <div className="text-sm font-semibold tracking-[0.42em] text-primary">УНІВЕРСИТЕТ</div>
+              <div className="text-xl font-bold leading-none text-primary">{dict.university.logoTop}</div>
+              <div className="text-sm font-semibold tracking-[0.42em] text-primary">{dict.university.logoBottom}</div>
             </div>
           )}
         </Link>
@@ -98,7 +99,7 @@ export function HeaderClient({
             <label className="flex h-9 w-56 items-center gap-2 rounded-md border border-border bg-white px-3 text-muted">
               <input
                 className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none"
-                placeholder="Пошук по сайту"
+                placeholder={dict.header.search} aria-label={dict.header.search}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -122,7 +123,7 @@ export function HeaderClient({
           </form>
         </div>
 
-        <button className="grid h-11 w-11 place-items-center rounded-md border border-border bg-white text-primary shadow-sm transition hover:border-primary hover:bg-[#f8fafd] lg:hidden" type="button" onClick={toggleMenu} aria-label="Меню" aria-expanded={isMenuOpen}>
+        <button className="grid h-11 w-11 place-items-center rounded-md border border-border bg-white text-primary shadow-sm transition hover:border-primary hover:bg-[#f8fafd] lg:hidden" type="button" onClick={toggleMenu} aria-label={isMenuOpen ? dict.header.closeMenu : dict.header.menu} aria-expanded={isMenuOpen}>
           <span className={cn("text-2xl leading-none transition duration-200", isMenuOpen && "rotate-90 scale-110")}>{isMenuOpen ? "×" : "☰"}</span>
         </button>
       </div>
@@ -171,13 +172,13 @@ export function HeaderClient({
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-border p-5">
-              <span className="text-lg font-bold text-primary">Меню</span>
-              <button className="grid h-10 w-10 place-items-center rounded-md border border-border text-2xl text-primary transition hover:border-primary hover:bg-[#f8fafd]" type="button" onClick={closeMenu} aria-label="Закрити меню">×</button>
+              <span className="text-lg font-bold text-primary">{dict.header.menu}</span>
+              <button className="grid h-10 w-10 place-items-center rounded-md border border-border text-2xl text-primary transition hover:border-primary hover:bg-[#f8fafd]" type="button" onClick={closeMenu} aria-label={dict.header.closeMenu}>×</button>
             </div>
             <div className="space-y-4 p-5">
               <form className="relative" onSubmit={submitSearch}>
                 <label className="flex h-11 items-center gap-2 rounded-md border border-border bg-white px-3 text-muted">
-                  <input className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none" placeholder="Пошук по сайту" value={query} onChange={(event) => setQuery(event.target.value)} />
+                  <input className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none" placeholder={dict.header.search} aria-label={dict.header.search} value={query} onChange={(event) => setQuery(event.target.value)} />
                   <Icon name="search" className="h-4 w-4" />
                 </label>
                 {!!results.length && (
@@ -223,7 +224,7 @@ export function HeaderClient({
 
 function LanguageSwitch({ lang, onChange }: { lang: Lang; onChange: (lang: Lang) => void }) {
   return (
-    <div className="inline-grid grid-cols-2 rounded-md border border-border bg-[#f4f7fb] p-1 shadow-sm" aria-label="Мова сайту">
+    <div className="inline-grid grid-cols-2 rounded-md border border-border bg-[#f4f7fb] p-1 shadow-sm" aria-label={getDictionary(lang).header.language}>
       {([
         ["uk", "UA"],
         ["en", "EN"],

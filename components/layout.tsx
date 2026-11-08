@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getDictionary } from "@/lib/i18n";
 import { getAllArticles } from "@/lib/data";
 import { getMainMenu, getReleases, getSiteSettings } from "@/lib/cms";
 import { HeaderClient } from "@/components/header-client";
@@ -7,6 +8,7 @@ import type { Lang } from "@/lib/types";
 
 export async function Shell({ lang, children }: { lang: Lang; active?: string; children: React.ReactNode }) {
   const [settings, menu, releases] = await Promise.all([getSiteSettings(lang), getMainMenu(lang), getReleases(lang)]);
+  const dict = getDictionary(lang);
   const articles = getAllArticles(releases);
 
   return (
@@ -20,7 +22,7 @@ export async function Shell({ lang, children }: { lang: Lang; active?: string; c
               {settings.logoHeader && (
                 <Image
                   src={settings.logoHeader}
-                  alt="Європейський університет"
+                  alt={dict.university.name}
                   width={308}
                   height={54}
                   className="h-auto w-full"

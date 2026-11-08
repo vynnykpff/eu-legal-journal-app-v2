@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatDate, getDictionary } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 import { JournalCover } from "@/components/cover";
 import { Icon } from "@/components/icons";
@@ -11,6 +12,7 @@ import { getArticleCount, getLocalizedPath } from "@/lib/data";
 import type { Lang, Release } from "@/lib/types";
 
 export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Release[] }) {
+  const dict = getDictionary(lang);
   const years = useMemo(() => [...new Set(releases.map((release) => release.year))], [releases]);
   const [year, setYear] = useState<string>("all");
   const [query, setQuery] = useState("");
@@ -33,24 +35,26 @@ export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Releas
         <div className="mb-5 grid gap-3 md:grid-cols-[minmax(360px,1fr)_minmax(220px,0.35fr)_minmax(320px,0.5fr)]">
           <label className="flex h-12 items-center gap-2 rounded-md border border-border bg-white px-4 text-muted shadow-sm transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
             <Icon name="search" className="h-4 w-4" />
-            <input className="min-w-0 flex-1 bg-transparent outline-none" placeholder="Пошук у архіві" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <input className="min-w-0 flex-1 bg-transparent outline-none" placeholder={dict.archive.search} aria-label={dict.archive.search} value={query} onChange={(event) => setQuery(event.target.value)} />
           </label>
           <Select
+            placeholder={dict.common.select}
             value={year}
             onValueChange={setYear}
-            options={[{ value: "all", label: "Всі роки" }, ...years.map((item) => ({ value: item, label: item }))]}
+            options={[{ value: "all", label: dict.archive.allYears }, ...years.map((item) => ({ value: item, label: item }))]}
           />
           <Select
+            placeholder={dict.common.select}
             value={sort}
             onValueChange={(value) => setSort(value as "new" | "old")}
             options={[
-              { value: "new", label: "Сортувати: спочатку нові" },
-              { value: "old", label: "Сортувати: спочатку старі" },
+              { value: "new", label: dict.archive.sortNew },
+              { value: "old", label: dict.archive.sortOld },
             ]}
           />
         </div>
         <div className="mb-4 text-sm text-muted">
-          Знайдено випусків: <span className="font-bold text-primary">{filtered.length}</span>
+          {dict.archive.found}{" "}<span className="font-bold text-primary">{filtered.length}</span>
         </div>
 
         <Accordion className="space-y-4">
@@ -66,15 +70,15 @@ export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Releas
                   </h2>
                 )}
                 <AccordionItem value={key} className="scroll-mt-24" id={key}>
-                  <AccordionTrigger className="p-3 sm:p-4">
+                  <AccordionTrigger expandLabel={dict.archive.expand} collapseLabel={dict.archive.collapse} className="p-3 sm:p-4">
                     <div className="grid flex-1 grid-cols-[72px_1fr] gap-3 sm:grid-cols-[92px_1fr] md:grid-cols-[92px_260px_1fr] md:items-center">
                       <div className="w-[72px] sm:w-auto">
-                        <JournalCover compact />
+                        <JournalCover lang={lang} compact />
                       </div>
                       <div>
                         <h3 className="text-lg font-bold leading-tight">{release.title}</h3>
-                        <div className="mt-0.5 text-sm text-muted">Опубліковано: {release.publicationDate}</div>
-                        <div className="text-sm text-muted">Статті: {getArticleCount(release)}</div>
+                        <div className="mt-0.5 text-sm text-muted">{dict.common.published}: {formatDate(lang, release.publicationDate)}</div>
+                        <div className="text-sm text-muted">{dict.common.articles}: {getArticleCount(release)}</div>
                       </div>
                     </div>
                   </AccordionTrigger>
@@ -91,8 +95,8 @@ export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Releas
             <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-md bg-accent-soft text-primary">
               <Icon name="search" className="h-5 w-5" />
             </div>
-            <h2 className="font-bold text-primary">Нічого не знайдено</h2>
-            <p className="mt-2 text-sm text-muted">Спробуйте змінити рік, сортування або пошуковий запит.</p>
+            <h2 className="font-bold text-primary">{dict.archive.emptyTitle}</h2>
+            <p className="mt-2 text-sm text-muted">{dict.archive.emptyBody}</p>
           </div>
         )}
       </div>
@@ -101,6 +105,7 @@ export function ArchiveClient({ lang, releases }: { lang: Lang; releases: Releas
 }
 
 export function IssueTable({ lang, release }: { lang: Lang; release: Release }) {
+  const dict = getDictionary(lang);
   return (
     <>
       <div className="grid gap-3 md:hidden">
@@ -108,7 +113,7 @@ export function IssueTable({ lang, release }: { lang: Lang; release: Release }) 
           <article key={article.slug} className="rounded-md border border-border bg-white p-4 shadow-sm transition hover:border-accent">
             <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-muted">
               <span>#{index + 1}</span>
-              <span>{article.pages ? `С. ${article.pages}` : "Сторінки -"}</span>
+              <span>{article.pages ? `${dict.common.pagesShort} ${article.pages}` : `${dict.common.pages} -`}</span>
             </div>
             <Link
               className="block text-base font-bold leading-6 text-primary transition hover:text-[#0b3d91] hover:underline hover:underline-offset-4"
@@ -142,9 +147,9 @@ export function IssueTable({ lang, release }: { lang: Lang; release: Release }) 
         <thead className="text-muted">
           <tr>
             <th className="py-2 pr-3">#</th>
-            <th className="px-3 py-2">Назва</th>
-            <th className="px-3 py-2">Автори</th>
-            <th className="px-3 py-2">Сторінки</th>
+            <th className="px-3 py-2">{dict.archive.colTitle}</th>
+            <th className="px-3 py-2">{dict.archive.colAuthors}</th>
+            <th className="px-3 py-2">{dict.archive.colPages}</th>
             <th className="px-3 py-2 text-center">PDF</th>
           </tr>
         </thead>
@@ -159,7 +164,7 @@ export function IssueTable({ lang, release }: { lang: Lang; release: Release }) 
               <td className="whitespace-nowrap px-3 py-3 align-top">{article.pages || "-"}</td>
               <td className="px-3 py-3 text-center align-top">
                 {article.file ? (
-                  <Tooltip content="Переглянути PDF">
+                  <Tooltip content={dict.archive.viewPdf}>
                     <a className="inline-grid h-9 w-9 place-items-center rounded-md border border-border text-primary transition hover:border-accent hover:bg-accent-soft" href={article.file} target="_blank" rel="noreferrer" aria-label={`PDF ${article.title}`}>
                       <Icon name="file" className="h-4 w-4" />
                     </a>

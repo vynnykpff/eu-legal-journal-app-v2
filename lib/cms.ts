@@ -1,11 +1,13 @@
-import { fallbackReleases, getAllArticles } from "@/lib/data";
+import { fallbackReleases, getAllArticles, getLocalizedPath, navItems } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n";
+import { normalizeCmsLink } from "@/lib/cms-links";
 import { plainMarkdown } from "@/lib/markdown";
 import type { Article, CmsPage, Lang, MenuItem, Release, SiteSettings } from "@/lib/types";
 
 const CMS_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   process.env.STRAPI_API_URL ??
-  (process.env.NODE_ENV === "development" ? "http://localhost:1337" : "https://cms.legal-journal.e-u.edu.ua");
+  "https://cms.legal-journal.e-u.edu.ua";
 const API_URL = `${CMS_URL.replace(/\/$/, "")}/api`;
 const LOCAL_HEADER_LOGO = "/images/header-logo.svg";
 const LOCAL_FOOTER_LOGO = "/images/footer-logo.svg";
@@ -28,9 +30,31 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 export async function getReleases(lang: Lang): Promise<Release[]> {
+  const releases = await getCmsReleases(lang);
+  if (releases.length) return releases;
+
+  if (lang === "en") {
+    const originals = await getCmsReleases("uk");
+    if (originals.length) {
+      return originals.map((release) => ({
+        ...release,
+        title: release.issueNumber ? `No. ${release.issueNumber} (${release.year})` : `Issue (${release.year})`,
+        description: fallbackReleases.en[0].description,
+        articles: release.articles.map((article) => ({ ...article, contentLang: "uk" })),
+      }));
+    }
+  }
+
+  return sortReleases(fallbackReleases[lang]);
+}
+
+async function getCmsReleases(lang: Lang): Promise<Release[]> {
   const archive = await fetchJson<{ data?: StrapiItem<{ year?: string; releases?: { data?: StrapiItem<Record<string, unknown>>[] } | StrapiItem<Record<string, unknown>>[] }>[] }>(
     `/archives?populate[releases][populate][releases][populate]=*&locale=${lang}`,
   );
+
+  const dict = getDictionary(lang);
+  const releaseDescription = fallbackReleases[lang][0].description;
 
   if (archive?.data?.length) {
     const releases = archive.data.flatMap((yearItem) => {
@@ -46,11 +70,11 @@ export async function getReleases(lang: Lang): Promise<Release[]> {
 
         return {
           id: rawRelease.id,
-          title: String(release.title ?? "Випуск"),
+          title: String(release.title ?? dict.common.issue),
           issueNumber: stringValue(release.issueNumber ?? release.issue_number),
           year: String(release.publicationYear ?? release.publication_year ?? yearAttrs.year ?? ""),
           publicationDate: normalizePublicationDate(release, yearAttrs.year),
-          description: "Актуальні дослідження у сфері права та правозастосування в Україні, Європі та світі.",
+          description: releaseDescription,
           pdf: mediaUrl(release.file),
           articles: rawArticles.map(normalizeArchiveArticle),
         } satisfies Release;
@@ -63,15 +87,15 @@ export async function getReleases(lang: Lang): Promise<Release[]> {
   const articles = await fetchJson<{ data?: StrapiItem<Record<string, unknown>>[] }>(`/articles?populate=*&locale=${lang}`);
   if (articles?.data?.length) {
     return [{
-      title: lang === "uk" ? "Поточний випуск" : "Current issue",
+      title: dict.currentIssue.title,
       year: "2026",
-      publicationDate: "15 травня 2026",
-      description: "Матеріали з CMS Strapi.",
+      publicationDate: "2026-05-15",
+      description: releaseDescription,
       articles: articles.data.map(normalizeBlogArticle),
     }];
   }
 
-  return sortReleases(fallbackReleases);
+  return [];
 }
 
 export async function getArticle(lang: Lang, slug: string): Promise<Article | null> {
@@ -127,7 +151,9 @@ export async function getMainMenu(lang: Lang): Promise<MenuItem[]> {
   );
   const items = attrs(payload?.data ?? {}).items;
 
-  if (!Array.isArray(items)) return [];
+  if (!Array.isArray(items) || !items.length) {
+    return navItems.map((item) => ({ label: item.label[lang], link: getLocalizedPath(lang, item.href), items: [] }));
+  }
 
   return items.map((item) => {
     const menuItem = attrs(item);
@@ -162,7 +188,7 @@ export async function getSiteSettings(lang: Lang): Promise<SiteSettings> {
     issn: String(mainMenu.issn ?? "3041-1149"),
     logoHeader: LOCAL_HEADER_LOGO,
     logoFooter: LOCAL_FOOTER_LOGO,
-    copyrights: String(setting.copyrights ?? "© Європейський правничий часопис"),
+    copyrights: String(setting.copyrights ?? getDictionary(lang).journal.copyrights),
   };
 }
 
@@ -175,7 +201,7 @@ export async function getCmsPages(lang: Lang): Promise<CmsPage[]> {
     const page = attrs(rawPage);
     const content = getRelationArray(page.content) ?? [];
     return {
-      title: String(page.title ?? titleFromPath(String(page.url ?? ""))),
+      title: String(page.title ?? titleFromPath(String(page.url ?? ""), getDictionary(lang).common.page)),
       url: normalizeCmsLink(lang, String(page.url ?? "")),
       description: content.find((block) => String(attrs(block).__component ?? "").includes("text"))
         ? plainMarkdown(String(attrs(content.find((block) => String(attrs(block).__component ?? "").includes("text")) ?? {}).content ?? "")).slice(0, 180)
@@ -298,23 +324,13 @@ function normalizePublicationDate(release: Record<string, unknown>, archiveYear:
   ) ?? String(release.publicationYear ?? release.publication_year ?? archiveYear ?? "");
 }
 
-function normalizeCmsLink(lang: Lang, link: string): string {
-  if (!link || link === "#") return "#";
-  if (link.startsWith("http")) return link;
-  const clean = link.startsWith("/") ? link : `/${link}`;
-  if (clean === `/${lang}`) return `/${lang}/`;
-  if (clean.startsWith(`/${lang}/`)) return clean;
-  if (clean === "/") return `/${lang}/`;
-  return `/${lang}${clean}`;
-}
-
-function titleFromPath(path: string): string {
+function titleFromPath(path: string, fallback: string): string {
   return path
     .split("/")
     .filter(Boolean)
     .at(-1)
     ?.replaceAll("-", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase()) ?? "Сторінка";
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) ?? fallback;
 }
 
 function normalizeListItem(item: unknown): string {
